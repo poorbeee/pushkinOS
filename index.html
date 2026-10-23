@@ -32,8 +32,6 @@
   /* КОНТЕЙНЕР ИКОНОК */
   #icons { position: absolute; top: 20px; left: 15px; display: flex; flex-direction: column;
     gap: 12px; width: 120px; z-index: 2; bottom: 60px; overflow-y: auto; overflow-x: hidden; padding: 0 4px 10px 4px; }
-  
-  /* Кастомный скроллбар для иконок (чтобы не выбивался из стиля) */
   #icons::-webkit-scrollbar { width: 6px; }
   #icons::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 3px; }
   #icons::-webkit-scrollbar-thumb { background: #2c4a35; border-radius: 3px; border: 1px solid #0a120c; }
@@ -44,11 +42,8 @@
     border: 1px solid transparent; transition: none; user-select: none; }
   .icon:hover { background: rgba(255,255,255,.05); border: 1px dashed #86a38e; }
   .icon .glyph { font-size: 32px; line-height: 1; margin-bottom: 4px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.8)); }
-  
-  /* Перенос слов для длинных имен файлов */
   .icon .label { font-family: 'Courier New', monospace; font-size: 12px; text-shadow: 1px 1px 0 #000; 
     width: 100%; word-break: break-word; line-height: 1.2; }
-    
   .icon.fixed::after { content: '✓'; position: absolute; top: 2px; right: 6px;
     width: 16px; height: 16px; background: #2c4a35; color: #a3b5a9;
     border: 1px solid #86a38e;
@@ -128,9 +123,12 @@
   #start:active { border-color: #000 #2c4a35 #2c4a35 #000; background: #0d1710; }
   #progress { flex: 1; text-align: left; letter-spacing: 1px; font-size: 12px; white-space: nowrap; 
     overflow: hidden; text-overflow: ellipsis; padding-left: 10px; color: #86a38e; }
-  #achv { display: flex; gap: 6px; font-size: 16px; display: none; }
-  #achv .a { opacity: .3; filter: grayscale(1); cursor: help; }
-  #achv .a.on { opacity: 1; filter: none; }
+    
+  /* АЧИВКИ */
+  #achv { display: flex; gap: 6px; font-size: 16px; margin-right: 10px; }
+  #achv .a { opacity: .3; filter: grayscale(1); cursor: help; transition: .3s; }
+  #achv .a.on { opacity: 1; filter: none; transform: scale(1.1); }
+  
   #clock { font-variant-numeric: tabular-nums; background: #1a1a1a; border: 1px solid; border-color: #000 #444 #444 #000;
     padding: 4px 12px; color: #e8e0cc; font-size: 12px; }
   
@@ -175,7 +173,11 @@
 
   /* ШИФР */
   .cipher-info { background: #1a3324; color: #d1a352; border: 2px solid; border-color: #fff #000 #000 #fff; padding: 10px 14px; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 16px; line-height: 1.5; }
-  .cipher-box { background: #0d1710; color: #86a38e; padding: 16px; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 2px; text-align: center; margin: 16px 0; border: 2px solid; border-color: #000 #86a38e #86a38e #000; word-break: break-all; line-height: 1.6; }
+  .cipher-box { background: #0d1710; color: #86a38e; padding: 16px; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 2px; text-align: center; margin: 16px 0; border: 2px solid; border-color: #000 #86a38e #86a38e #000; white-space: pre-wrap; word-wrap: break-word; line-height: 1.8; }
+  
+  /* Стиль для эмодзи-ребуса */
+  .cipher-emoji { font-size: 28px; letter-spacing: 8px; padding: 20px 10px; line-height: 1.6; }
+
   .cipher-help { background: #dcd3bd; border: 1px dashed #8b7d5b; padding: 12px; font-size: 12px; color: #2b2b2b; margin: 12px 0; line-height: 1.5; }
   .cipher-help code { background: #e8e0cc; padding: 2px 6px; font-family: 'Courier New', monospace; color: #1a3324; border: 1px solid #8b7d5b; }
   .cipher-result { margin-top: 16px; padding: 16px; background: #fffdf5; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b; font-size: 14px; font-style: italic; color: #1a3324; line-height: 1.6; }
@@ -222,6 +224,14 @@
   .wp-actions { display: flex; gap: 4px; }
   .wp-actions button { flex: 1; }
   
+  /* ДОСТИЖЕНИЯ (СПИСОК) */
+  .achv-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .achv-card { background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; padding: 10px; display: flex; align-items: center; gap: 10px; opacity: 0.5; filter: grayscale(1); }
+  .achv-card.unlocked { opacity: 1; filter: none; background: #e8e0cc; border-color: #fff #2c4a35 #2c4a35 #fff; }
+  .achv-card .a-icon { font-size: 28px; flex-shrink: 0; }
+  .achv-card .a-info h4 { font-size: 13px; color: #1a3324; font-family: 'Courier New', monospace; margin-bottom: 2px; }
+  .achv-card .a-info p { font-size: 11px; color: #4a4a4a; line-height: 1.3; margin: 0; }
+  
   /* ПРОФИЛЬ */
   .profile-card { padding: 16px; background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; margin-bottom: 12px; cursor: pointer; transition: none; }
   .profile-card:hover { background: #e8e0cc; }
@@ -243,6 +253,8 @@
     #taskbar { height: 50px; gap: 6px; padding: 0 6px; }
     #start { padding: 6px 10px; font-size: 12px; height: 36px; }
     #progress { font-size: 11px; padding-left: 4px; }
+    #achv { display: none; }
+    
     .option { padding: 12px; font-size: 14px; }
     .input-row { flex-direction: column; gap: 10px; }
     .btn { width: 100%; padding: 12px; font-size: 15px; }
@@ -255,7 +267,9 @@
     .scdb-grid { grid-template-columns: 1fr; gap: 8px; }
     .ball-move { padding: 14px 8px; font-size: 14px; }
     .cipher-box { font-size: 14px; letter-spacing: 1px; padding: 12px; }
+    .cipher-emoji { font-size: 24px; letter-spacing: 4px; }
     .settings-grid { grid-template-columns: 1fr; }
+    .achv-list { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -473,6 +487,7 @@ const APPS = [
   { id:'tarot', name:'Оракул.exe', icon:'🎴' },
   { id:'ball',  name:'Бал.exe', icon:'💃' },
   { id:'cipher',name:'Тайнопись.exe', icon:'🔐' },
+  { id:'achv',  name:'Достижения.exe', icon:'🏆' },
   { id:'settings', name:'Настройки.exe', icon:'⚙️' },
   { id:'secret',name:'А.С.Пушкин.архив', icon:'📜', secret:true }
 ];
@@ -584,7 +599,7 @@ const TAROT = [
 const TAROT_POSITIONS = ['Прошлое', 'Настоящее', 'Будущее', 'Совет', 'Тайное'];
 
 /* =========================================================
-   ШИФРЫ
+   ШИФРЫ (ОБНОВЛЕНО: ЭМОДЗИ-РЕБУС)
    ========================================================= */
 const PROPHECIES = [
   "Что пройдёт, то будет мило",
@@ -599,6 +614,16 @@ const PROPHECIES = [
   "Привычка свыше нам дана: замена счастию она",
   "Блажен, кто верует, тепло ему на свете!",
   "Мечты, мечты! Где ваша сладость?"
+];
+
+// База для эмодзи-ребусов
+const EMOJI_RIDDLES = [
+  { q: "❄️ и ☀️; день ✨!", a: "Мороз и солнце; день чудесный!" },
+  { q: "Что ⏳, то будет 🍬", a: "Что пройдёт, то будет мило" },
+  { q: "🍂 пора! 👁️ очарованье!", a: "Унылая пора! Очей очарованье!" },
+  { q: "Мечты, мечты! 📍 ваша 🍬?", a: "Мечты, мечты! Где ваша сладость?" },
+  { q: "Блажен, кто 🙏, тепло ему на 🌍!", a: "Блажен, кто верует, тепло ему на свете!" },
+  { q: "Служенье 🎶 не терпит 🏃‍♂️💨", a: "Служенье муз не терпит суеты" }
 ];
 
 /* =========================================================
@@ -718,6 +743,10 @@ function unlock(k){
   if(document.querySelector('.window[data-id="settings"]')){
     document.querySelector('.window[data-id="settings"] .close').click();
     openWindow('settings');
+  }
+  if(document.querySelector('.window[data-id="achv"]')){
+    document.querySelector('.window[data-id="achv"] .close').click();
+    openWindow('achv');
   }
 }
 
@@ -934,8 +963,34 @@ function renderApp(win, app){
   if (app.id === 'tarot')  renderTarot(win);
   if (app.id === 'ball')   renderBall(win);
   if (app.id === 'cipher') renderCipher(win);
+  if (app.id === 'achv')   renderAchievements(win);
   if (app.id === 'settings') renderSettings(win);
   if (app.id === 'secret') renderSecret(win);
+}
+
+/* --- ДОСТИЖЕНИЯ --- */
+function renderAchievements(win){
+  win.innerHTML = `
+    <div class="titlebar"><span>🏆 Достижения.exe</span><button class="close">×</button></div>
+    <div class="window-body">
+      <p>Выполняй задания, проходи игры и открывай обои. Вот твой прогресс:</p>
+      <p style="font-size:12px;color:#4a3b16;">Получено: <b>${gotAchv.size}</b> из <b>${Object.keys(ACHV).length}</b></p>
+      
+      <div class="achv-list">
+        ${Object.entries(ACHV).map(([k, a]) => {
+          const isUnlocked = gotAchv.has(k);
+          return `
+            <div class="achv-card ${isUnlocked ? 'unlocked' : ''}">
+              <div class="a-icon">${a.icon}</div>
+              <div class="a-info">
+                <h4>${a.title} ${isUnlocked ? '✓' : '🔒'}</h4>
+                <p>${isUnlocked ? 'Получено!' : 'Подсказка: ' + a.hint}</p>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>`;
 }
 
 /* --- НАСТРОЙКИ --- */
@@ -1195,7 +1250,7 @@ function renderBall(win){
     {id:0, ic:'🎩', name:'Поклон'},
     {id:1, ic:'👗', name:'Реверанс'},
     {id:2, ic:'💃', name:'Пируэт'},
-    {id:3, ic:'🎻', name:'Вальс'}
+    {id:3, ic:'🩰', name:'Арабеск'}
   ];
 
   let level = 1, maxLevel = 4, sequence = [], userInput = [], accepting = false;
@@ -1229,21 +1284,27 @@ function renderBall(win){
     accepting = false;
     buttons.forEach(b => b.disabled = true);
     statusEl.textContent = 'Смотри...';
+    
     let i = 0;
-    const tick = setInterval(() => {
-      if (i > 0) buttons.forEach(b => b.classList.remove('lit'));
+    function nextStep() {
       if (i >= sequence.length) {
-        clearInterval(tick);
-        buttons.forEach(b => b.classList.remove('lit'));
-        accepting = true;
-        userInput = [];
+        accepting = true; userInput = [];
         buttons.forEach(b => b.disabled = false);
         statusEl.textContent = 'Твой ход!';
         return;
       }
       const btn = win.querySelector(`.ball-move[data-id="${sequence[i]}"]`);
-      btn.classList.add('lit'); i++;
-    }, 550);
+      btn.classList.add('lit');
+      
+      setTimeout(() => {
+        btn.classList.remove('lit');
+        i++;
+        // Пауза 200мс после выключения, чтобы даже двойное мигание было заметно
+        setTimeout(nextStep, 200);
+      }, 400); // Горит 400мс
+    }
+    
+    setTimeout(nextStep, 400); // Начальная пауза перед первым миганием
   }
 
   function startRound(){
@@ -1299,34 +1360,31 @@ function renderBall(win){
   startRound();
 }
 
-/* --- ШИФР --- */
+/* --- ШИФР (ЭМОДЗИ-РЕБУС) --- */
 function renderCipher(win){
-  const phrase = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
-  const cipherType = ['caesar', 'substitution', 'dancing'][Math.floor(Math.random()*3)];
+  const cipherType = ['caesar1', 'caesar3', 'emoji'][Math.floor(Math.random()*3)];
   
-  let encoded = '';
+  let displayContent = '';
   let helpHTML = '';
   let typeName = '';
+  let answer = '';
 
-  if (cipherType === 'caesar') {
+  if (cipherType === 'caesar1') {
     typeName = 'Шифр Цезаря (+1)';
-    helpHTML = `Каждая буква заменена на следующую в алфавите (А→Б, Б→В... Я→А). Ё пропущена.`;
-    encoded = caesarEncode(phrase, 1);
-  } else if (cipherType === 'substitution') {
-    typeName = 'Шифр подстановки';
-    const letters = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
-    const dict = {};
-    for(let i=0; i<letters.length; i++) dict[letters[i]] = String(i+1).padStart(2, '0');
-    encoded = phrase.toUpperCase().split('').map(ch => dict[ch] ? dict[ch] : ch).join(' ');
-    helpHTML = `Каждой букве соответствует число. Начало: <br><code>А=${dict['А']}, Б=${dict['Б']}, В=${dict['В']}, Г=${dict['Г']}</code>...`;
+    helpHTML = `Каждая буква сдвинута на 1 вперед в алфавите (включая Ё).<br><br><b>Пример:</b> А → Б, Б → В... Я → А.`;
+    answer = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
+    displayContent = `<div class="cipher-box">${caesarEncode(answer, 1)}</div>`;
+  } else if (cipherType === 'caesar3') {
+    typeName = 'Шифр Цезаря (+3)';
+    helpHTML = `Каждая буква сдвинута на 3 вперед в алфавите (включая Ё).<br><br><b>Пример:</b> А → Г, Б → Д... Я → В.`;
+    answer = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
+    displayContent = `<div class="cipher-box">${caesarEncode(answer, 3)}</div>`;
   } else {
-    typeName = 'Пляшущие человечки';
-    helpHTML = `Каждому символу соответствует буква. Это шифр из рассказа Конан Дойла.`;
-    const letters = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
-    const symbols = '☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼'.split('');
-    const dict = {};
-    for(let i=0; i<letters.length; i++) dict[letters[i]] = symbols[i];
-    encoded = phrase.toUpperCase().split('').map(ch => dict[ch] ? dict[ch] : ch).join(' ');
+    typeName = 'Эмодзи-Ребус';
+    helpHTML = `Каждое эмодзи заменяет слово или часть слова.<br><br><b>Подсказка:</b> это известная строка Александра Сергеевича Пушкина.`;
+    const riddle = EMOJI_RIDDLES[Math.floor(Math.random() * EMOJI_RIDDLES.length)];
+    answer = riddle.a;
+    displayContent = `<div class="cipher-box cipher-emoji">${riddle.q}</div>`;
   }
 
   win.innerHTML = `
@@ -1336,16 +1394,12 @@ function renderCipher(win){
       
       <div class="cipher-info">
         <b>📜 ${typeName}</b><br>
-        ${cipherType === 'caesar' ? 'Шифр Юлия Цезаря. В литературе встречается у Свифта и По.' : ''}
-        ${cipherType === 'substitution' ? 'Древний шифр подстановки. Им пользовались алхимики и писатели.' : ''}
-        ${cipherType === 'dancing' ? 'Шифр из рассказа Артура Конан Дойла «Пляшущие человечки».' : ''}
+        ${helpHTML}
       </div>
 
       <p>Расшифруй строку и узнай предсказание.</p>
 
-      <div class="cipher-box">${encoded}</div>
-      
-      <div class="cipher-help">${helpHTML}</div>
+      ${displayContent}
 
       <div class="input-row">
         <input type="text" id="cipherInput" placeholder="Введи текст...">
@@ -1360,7 +1414,7 @@ function renderCipher(win){
   const res = win.querySelector('#cipherResult');
   
   const clean = (s) => s.toUpperCase().replace(/[^А-ЯЁ\s]/g, '').replace(/\s+/g, ' ').trim();
-  const correctClean = clean(phrase);
+  const correctClean = clean(answer);
 
   btn.addEventListener('click', () => {
     if (clean(input.value) === correctClean) {
@@ -1370,7 +1424,7 @@ function renderCipher(win){
       res.innerHTML = `
         <div class="cipher-result">
           <b>✓ РАСШИФРОВАНО</b>
-          «${phrase}»<br><br>
+          «${answer}»<br><br>
           <span style="font-size:12px;">Пусть эта строка станет твоим предсказанием на сегодня.</span>
         </div>
       `;
@@ -1386,7 +1440,7 @@ function renderCipher(win){
 }
 
 function caesarEncode(text, shift) {
-  const alphabet = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+  const alphabet = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
   return text.toUpperCase().split('').map(ch => {
     const idx = alphabet.indexOf(ch);
     if (idx === -1) return ch;
