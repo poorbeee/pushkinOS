@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ПУШКИН.ОС v4.0 — СЦДБ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Courier New', monospace; background: #000; }
+
+  #boot { position: fixed; inset: 0; background: #000; color: #4ade80;
+    padding: 40px; font-size: 15px; line-height: 2; z-index: 10000; cursor: pointer; }
+  #boot .line { opacity: 0; animation: fadeIn .25s forwards; }
+  #boot .warn { color: #fbbf24; } #boot .ok { color: #4ade80; }
+  @keyframes fadeIn { to { opacity: 1 } }
+  #boot.hide { opacity: 0; pointer-events: none; transition: opacity .6s; }
+
+  #desktop { position: fixed; inset: 0;
+    background: radial-gradient(circle at 50% 40%, #1b2a4a 0%, #070b14 100%); overflow: hidden; }
+  #desktop::before { content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(212,175,55,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212,175,55,.04) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; }
+
+  #icons { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column;
+    gap: 6px; width: 118px; z-index: 2; }
+  .icon { position: relative; display: flex; flex-direction: column; align-items: center;
+    padding: 8px 4px; border-radius: 6px; cursor: pointer; color: #e8e4d8; text-align: center;
+    border: 1px solid transparent; transition: .12s; user-select: none; }
+  .icon:hover { background: rgba(255,255,255,.07); border-color: rgba(212,175,55,.4); }
+  .icon .glyph { font-size: 30px; line-height: 1; }
+  .icon .label { font-size: 11px; margin-top: 5px; word-break: break-word; }
+  .icon.fixed::after { content: '✓'; position: absolute; top: 4px; right: 10px;
+    width: 18px; height: 18px; border-radius: 50%; background: #2d5a45; color: #d4af37;
+    display: flex; align-items: center; justify-content: center; font-size: 12px;
+    font-weight: bold; box-shadow: 0 0 8px rgba(74,222,128,.6); }
+  .icon.secret { display: none; }
+  .icon.secret.unlocked { display: flex; animation: pop .5s ease; }
+
+  #windows { position: absolute; inset: 0; pointer-events: none; }
+  .window { position: absolute; width: 520px; pointer-events: auto; background: #f4ecd8;
+    border: 2px solid #12241d; border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(212,175,55,.25);
+    overflow: hidden; animation: pop .16s ease; }
+  @keyframes pop { from { transform: scale(.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+  .titlebar { background: linear-gradient(90deg, #12241d, #2d5a45); color: #d4af37;
+    padding: 9px 12px; display: flex; justify-content: space-between; align-items: center;
+    cursor: move; font-size: 13px; user-select: none; border-bottom: 1px solid rgba(212,175,55,.3); }
+  .close { background: #7f1d1d; color: #fecaca; border: 1px solid #ef4444; width: 22px;
+    height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
+    line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .close:hover { background: #ef4444; color: #fff; }
+  .window-body { padding: 16px; color: #262626; font-size: 13px; line-height: 1.55;
+    max-height: 72vh; overflow-y: auto; }
+  .window-body p { margin-bottom: 10px; }
+  .portrait { width: 100%; height: 170px; margin-bottom: 14px; border-radius: 6px;
+    background: repeating-linear-gradient(45deg, #e3d9c0, #e3d9c0 12px, #d8cdb0 12px, #d8cdb0 24px);
+    border: 2px dashed #a89877; display: flex; align-items: center; justify-content: center;
+    color: #6b6144; font-size: 11px; text-align: center; padding: 14px; line-height: 1.4; }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
+  .status { background: #0d0d0d; color: #f87171; padding: 7px 10px; font-size: 11px;
+    border-radius: 4px; margin-bottom: 12px; border-left: 3px solid #ef4444; }
+  .status.ok { color: #4ade80; border-left-color: #4ade80; }
+  .question { font-weight: bold; margin: 12px 0 10px; color: #12241d; font-size: 13px; }
+  .option { display: block; width: 100%; text-align: left; background: #fffdf5;
+    border: 1px solid #c9bfa4; color: #262626; padding: 9px 12px; margin-bottom: 7px;
+    border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 12px;
+    transition: .12s; line-height: 1.4; }
+  .option:hover:not(:disabled) { background: #fff8e0; border-color: #d4af37; transform: translateX(2px); }
+  .option.correct { background: #d4f5d4; border-color: #2d5a45; color: #14532d; font-weight: bold; }
+  .option.wrong { background: #fde0e0; border-color: #c0392b; color: #7f1d1d; animation: shake .3s; }
+  .option:disabled { cursor: default; opacity: .85; }
+  @keyframes shake { 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
+  .success-box { background: linear-gradient(135deg, #d4f5d4, #b8e6b8);
+    border: 2px solid #2d5a45; border-radius: 6px; padding: 14px; margin-top: 12px;
+    color: #14532d; font-size: 12px; animation: pop .3s ease; }
+  .success-box b { display: block; margin-bottom: 6px; font-size: 13px; }
+  .input-row { display: flex; gap: 8px; margin: 10px 0; }
+  .input-row input { flex: 1; padding: 9px 12px; border: 2px solid #c9bfa4;
+    border-radius: 5px; font-family: inherit; font-size: 13px; background: #fffdf5; color: #12241d; }
+  .input-row input:focus { outline: none; border-color: #d4af37; }
+  .btn { padding: 9px 16px; background: #d4af37; color: #12241d; border: none;
+    border-radius: 5px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 12px; }
+  .btn:hover { background: #e8c860; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  #taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 42px;
+    background: linear-gradient(180deg, #2d5a45, #12241d); border-top: 2px solid #d4af37;
+    display: flex; align-items: center; padding: 0 12px; gap: 14px; color: #d4af37;
+    font-size: 12px; z-index: 9998; box-shadow: 0 -4px 20px rgba(0,0,0,.5); }
+  #start { padding: 7px 14px; background: #d4af37; color: #12241d; font-weight: bold;
+    border-radius: 5px; cursor: pointer; font-size: 12px; letter-spacing: .5px;
+    border: none; font-family: inherit; }
+  #start:hover { background: #e8c860; }
+  #progress { flex: 1; text-align: center; letter-spacing: 1px; font-size: 11px; }
+  #achv { display: flex; gap: 4px; font-size: 16px; }
+  #achv .a { opacity: .2; filter: grayscale(1); transition: .4s; cursor: help; }
+  #achv .a.on { opacity: 1; filter: none; transform: scale(1.15); }
+  #clock { font-variant-numeric: tabular-nums; opacity: .8; }
+  #startmenu { position: absolute; bottom: 48px; left: 12px; background: #f4ecd8;
+    border: 2px solid #12241d; border-radius: 8px; padding: 6px; display: none;
+    min-width: 230px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+  #startmenu.open { display: block; animation: pop .15s ease; }
+  #startmenu .mi { padding: 9px 12px; cursor: pointer; font-size: 12px; border-radius: 5px;
+    color: #262626; display: flex; gap: 8px; align-items: center; }
+  #startmenu .mi:hover { background: #d4af37; color: #12241d; }
+  .final .titlebar { background: linear-gradient(90deg, #7a5c00, #d4af37); color: #12241d; }
+
+  /* ТАРО */
+  .tarot-spread { display: flex; gap: 8px; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
+  .tcard { width: 140px; height: 220px; perspective: 900px; cursor: pointer; position: relative; }
+  .tcard-inner { position: absolute; inset: 0; transition: transform .7s;
+    transform-style: preserve-3d; }
+  .tcard.flipped .tcard-inner { transform: rotateY(180deg); }
+  .tcard-face { position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 8px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 8px; text-align: center; font-size: 10px;
+    border: 2px solid #12241d; }
+  .tcard-front { background: linear-gradient(135deg, #12241d, #2d5a45); color: #d4af37; }
+  .tcard-front .sym { font-size: 32px; margin-bottom: 6px; }
+  .tcard-front .pos { font-size: 9px; letter-spacing: 2px; opacity: .8; margin-top: 6px; }
+  .tcard-back { background: #fffdf5; color: #12241d; transform: rotateY(180deg);
+    border-color: #d4af37; justify-content: flex-start; padding-top: 10px; overflow-y: auto; }
+  .tcard-back .sym { font-size: 22px; }
+  .tcard-back .nm { font-weight: bold; font-size: 11px; margin: 2px 0 4px; }
+  .tcard-back .mn { font-size: 9px; line-height: 1.3; color: #4a4a4a; padding: 0 4px; }
+  .reading { margin-top: 12px; padding: 12px; background: #fff8e0;
+    border-left: 3px solid #d4af37; font-size: 12px; border-radius: 4px; display: none; }
+  .reading.show { display: block; animation: pop .3s ease; }
+  .reading h4 { font-size: 12px; color: #12241d; margin: 8px 0 4px; }
+  .reading h4:first-child { margin-top: 0; }
+  .reading .total { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d4af37;
+    font-style: italic; color: #7a5c00; }
+
+  /* БАЛ */
+  .ball-stage { background: linear-gradient(180deg, #2a1810, #0d0808);
+    border-radius: 8px; padding: 18px; text-align: center; margin-bottom: 12px;
+    border: 1px solid #d4af37; position: relative; overflow: hidden; }
+  .ball-stage::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(212,175,55,.15) 0%, transparent 60%); }
+  .ball-stage > * { position: relative; }
+  .ball-round { color: #d4af37; font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; }
+  .ball-status { color: #e8e4d8; font-size: 12px; min-height: 22px; margin-bottom: 12px;
+    font-style: italic; }
+  .ball-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ball-move { padding: 16px 8px; border-radius: 8px; border: 2px solid #12241d;
+    background: #fffdf5; color: #12241d; cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: bold; transition: .12s; display: flex;
+    align-items: center; justify-content: center; gap: 8px; }
+  .ball-move:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212,175,55,.3); }
+  .ball-move:disabled { opacity: .5; cursor: default; }
+  .ball-move.lit { background: #d4af37; color: #12241d; transform: scale(1.05);
+    box-shadow: 0 0 24px #d4af37; }
+  .ball-move .ic { font-size: 22px; }
+
+  /* ШИФР */
+  .cipher-info { background: #f0e6cc; border-left: 3px solid #7a5c00; padding: 10px 12px;
+    border-radius: 4px; font-size: 11px; margin-bottom: 12px; color: #4a3a10; line-height: 1.5; }
+  .cipher-info b { color: #12241d; }
+  .cipher-box { background: #0d0d0d; color: #4ade80; padding: 16px; border-radius: 6px;
+    font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 3px;
+    text-align: center; margin: 12px 0; border: 1px solid #2d5a45; word-break: break-all;
+    line-height: 1.6; }
+  .cipher-help { background: #fffdf5; border: 1px dashed #c9bfa4; padding: 10px;
+    border-radius: 4px; font-size: 11px; color: #4a4a4a; margin: 10px 0; line-height: 1.5; }
+  .cipher-help code { background: #f0e6cc; padding: 2px 6px; border-radius: 3px;
+    font-family: 'Courier New', monospace; color: #12241d; }
+  .cipher-result { margin-top: 12px; padding: 14px; background: #fff8e0;
+    border-left: 3px solid #d4af37; border-radius: 4px; font-size: 12px;
+    font-style: italic; color: #7a5c00; line-height: 1.6; }
+  .cipher-result b { font-style: normal; color: #12241d; display: block; margin-bottom: 6px; }
+
+  /* СООТНЕСИ */
+  .match-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .match-col { display: flex; flex-direction: column; gap: 6px; }
+  .match-item { padding: 9px 10px; background: #fffdf5; border: 2px solid #c9bfa4;
+    border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 11px;
+    text-align: left; transition: .12s; color: #262626; line-height: 1.35; }
+  .match-item:hover:not(.matched) { border-color: #d4af37; background: #fff8e0; }
+  .match-item.selected { background: #d4af37; color: #12241d; border-color: #7a5c00;
+    font-weight: bold; }
+  .match-item.matched { background: #d4f5d4; border-color: #2d5a45; color: #14532d;
+    cursor: default; opacity: .85; }
+  .match-item.wrong { animation: shake .3s; background: #fde0e0; border-color: #c0392b; }
+
+  /* СЦДБ */
+  .scdb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+  .scdb-node { background: #fffdf5; border: 2px solid #c9bfa4; border-radius: 8px;
+    padding: 12px 8px; cursor: pointer; font-family: inherit; text-align: center;
+    transition: .15s; color: #262626; }
+  .scdb-node:hover { transform: translateY(-2px); border-color: #d4af37;
+    box-shadow: 0 6px 18px rgba(0,0,0,.15); }
+  .scdb-node.done { background: linear-gradient(135deg, #d4f5d4, #b8e6b8);
+    border-color: #2d5a45; }
+  .scdb-emoji { font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .scdb-num { font-size: 10px; color: #6b6144; letter-spacing: 1px; }
+  .scdb-name { font-size: 11px; font-weight: bold; margin: 2px 0; }
+  .scdb-addr { font-size: 9px; color: #8a8065; }
+  .scdb-off { font-size: 10px; color: #a89877; margin-top: 4px; }
+  .scdb-check { font-size: 10px; color: #14532d; font-weight: bold; margin-top: 4px; }
+  .ticket { margin-top: 14px; background: #fff8e0; border: 2px dashed #d4af37;
+    border-radius: 8px; padding: 12px; }
+  .ticket-head { font-weight: bold; color: #12241d; margin-bottom: 10px;
+    font-size: 12px; text-align: center; letter-spacing: 1px; }
+  .ticket-stamps { display: flex; justify-content: space-around; gap: 6px; }
+  .stamp { width: 48px; height: 48px; border-radius: 50%; border: 2px dashed #c9bfa4;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 16px; color: #a89877; opacity: .4; transition: .3s;
+    background: #fffdf5; }
+  .stamp span { font-size: 8px; }
+  .stamp.on { opacity: 1; border-style: solid; border-color: #2d5a45;
+    color: #14532d; background: #d4f5d4; transform: rotate(-4deg); }
+  .ticket-foot { text-align: center; margin-top: 10px; font-size: 11px; color: #6b6144; }
+
+  /* ПРОФИЛЬ */
+  .profile-card { padding: 16px; background: #fffdf5; border: 2px solid #c9bfa4;
+    border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: .15s; }
+  .profile-card:hover { border-color: #d4af37; transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.15); }
+  .profile-card h3 { font-size: 14px; color: #12241d; margin-bottom: 6px; }
+  .profile-card p { font-size: 11px; color: #6b6144; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div id="boot" onclick="this.classList.add('hide')"><div id="bootlog"></div></div>
+
+<div id="desktop">
+  <div id="icons"></div>
+  <div id="windows"></div>
+  <div id="taskbar">
+    <button id="start">⊞ ПУШКИН.ОС</button>
+    <div id="progress">Загрузка...</div>
+    <div id="achv"></div>
+    <div id="clock">--:--:--</div>
+  </div>
+  <div id="startmenu"></div>
+</div>
+
+<script>
+/* =========================================================
+   СОСТОЯНИЕ И ПРОФИЛЬ
+   ========================================================= */
+let PROFILE = localStorage.getItem('pushkin_profile') || null;
+let zIndex = 10;
+
+const fixedFiles = new Set(JSON.parse(localStorage.getItem('pushkin_fixedFiles') || '[]'));
+const doneApps = new Set(JSON.parse(localStorage.getItem('pushkin_doneApps') || '[]'));
+const doneBranches = new Set(JSON.parse(localStorage.getItem('pushkin_doneBranches') || '[]'));
+const gotAchv = new Set(JSON.parse(localStorage.getItem('pushkin_gotAchv') || '[]'));
+
+function saveState(){
+  localStorage.setItem('pushkin_fixedFiles', JSON.stringify([...fixedFiles]));
+  localStorage.setItem('pushkin_doneApps', JSON.stringify([...doneApps]));
+  localStorage.setItem('pushkin_doneBranches', JSON.stringify([...doneBranches]));
+  localStorage.setItem('pushkin_gotAchv', JSON.stringify([...gotAchv]));
+}
+
+function chooseProfile(){
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.dataset.id = 'profile';
+  win.style.left = '50%'; win.style.top = '45%';
+  win.style.transform = 'translate(-50%,-50%)';
+  win.style.width = '520px';
+  win.style.zIndex = ++zIndex;
+  win.innerHTML = `
+    <div class="titlebar"><span>👤 Выбор профиля администратора</span></div>
+    <div class="window-body">
+      <p style="margin-bottom:14px;">Прежде чем войти в систему, выбери свой путь. Это влияет на подсказки и строгость проверки.</p>
+      <div class="profile-card" data-profile="intern">
+        <h3>🎓 Стажёр</h3>
+        <p>Подсказки включены. Ошибки не сбрасывают прогресс. Идеально для первого знакомства с системой.</p>
+      </div>
+      <div class="profile-card" data-profile="keeper">
+        <h3>🗝️ Хранитель</h3>
+        <p>Без подсказок. Ошибки в «порядке» сбрасывают шаг. Для тех, кто любит вызов.</p>
+      </div>
+    </div>`;
+  document.getElementById('windows').appendChild(win);
+  win.querySelectorAll('.profile-card').forEach(c => {
+    c.addEventListener('click', () => {
+      PROFILE = c.dataset.profile;
+      localStorage.setItem('pushkin_profile', PROFILE);
+      win.remove();
+      toast('👤 Профиль выбран', PROFILE === 'intern' ? 'Стажёр' : 'Хранитель');
+      initIcons(); // перерисовываем readme
+    });
+  });
+}
+
+/* =========================================================
+   ФАЙЛЫ ПУШКИНА
+   ========================================================= */
+const FILES = [
+  { id:'readme', name:'ПРОЧТИ_МЕНЯ.txt', icon:'📄', status:'ФАЙЛ ЧИТАЕМ', statusOk:true,
+    portrait:'ЗДЕСЬ: коллаж — перо, чернильница, старая книга',
+    intro:`<p><b>ПУШКИН.ОС v4.0</b> — операционная система литературного архива СЦДБ.</p>
+      <p>Произошёл сбой: <b>6 файлов повреждены</b>. Имена файлов искажены — но внутри спрятаны герои и сюжеты. На рабочем столе также: <b>СЦДБ.Карта</b>, <b>Оракул</b>, <b>Бал</b> и <b>Тайнопись</b>.</p>
+      <p>Восстанови 6 файлов, подключи 5 филиалов, пройди 3 программы — и откроется секретный архив.</p>
+      <p style="opacity:.65;font-size:11px;margin-top:14px;">Выбран профиль: <b>${PROFILE === 'intern' ? '🎓 Стажёр' : '🗝️ Хранитель'}</b>. Сменить можно в меню «ПУШКИН.ОС».</p>`,
+    task:null },
+
+  { id:'onegin', name:'лишний_гость.exe', icon:'⚙️',
+    status:'ERROR 0x1812: среди событий затесался чужак',
+    portrait:'ЗДЕСЬ: бальный зал, силуэт в цилиндре, свечи',
+    intro:'В памяти процесса — 6 событий. Пять из одного романа, одно — из другого произведения. Найди чужака.',
+    task:{ type:'quiz', question:'Какое событие НЕ из «Евгения Онегина»?',
+      options:[
+        'Дуэль двух друзей из-за пустяка',
+        'Письмо, написанное ночью у свечи',
+        'Герой проигрывает три карты и сходит с ума',
+        'Сон, в котором героиня видит медведя',
+        'Отповедь героя в саду',
+        'Встреча через годы в Петербурге'
+      ],
+      correct:2 },
+    success:'Чужак найден. Это Германн из «Пиковой дамы». «Евгений Онегин» снова цел.' },
+
+  { id:'skazka', name:'три_желания.exe', icon:'🐟',
+    status:'КОНФЛИКТ: герои перепутали поступки',
+    portrait:'ЗДЕСЬ: синее море, старик и старуха, разбитое корыто',
+    intro:'Процесс перепутал, кто из героев что сделал. Восстанови справедливость.',
+    task:{ type:'match', question:'Соотнеси героя и его поступок (из «Сказки о рыбаке и рыбке»)',
+      pairs:[
+        {left:'Старик', right:'Трижды закинул невод и поймал рыбку'},
+        {left:'Старуха', right:'Захотела быть владычицей морскою'},
+        {left:'Золотая рыбка', right:'Откупилась и вернулась в море'},
+        {left:'Разбитое корыто', right:'Осталось у порога землянки'},
+        {left:'Синее море', right:'Почернело от жадности'}
+      ]
+    },
+    success:'Сказка восстановлена. «А перед нею разбитое корыто».' },
+
+  { id:'poema', name:'голова_и_меч.exe', icon:'⚔️',
+    status:'ПОТЕРЯ: герой забыл свой путь',
+    portrait:'ЗДЕСЬ: богатырь, гигантская голова, меч, туман',
+    intro:'Герой поэмы прошёл через испытания, но память его повреждена. Восстанови цепочку.',
+    task:{ type:'order', question:'Расставь события поэмы «Руслан и Людмила» по порядку:',
+      lines:[
+        'Свадьба Руслана и Людмилы — и похищение невесты',
+        'Руслан встречает голову и добывает меч',
+        'Руслан побеждает Черномора в бою',
+        'Руслан находит Людмилу, но она спит',
+        'Руслан прощает Фарлафа и будит Людмилу'
+      ]
+    },
+    success:'Путь восстановлен. «И память юного поэта / Мой ум и душу оживит».' },
+
+  { id:'proza', name:'капитанская_дочь.log', icon:'📜',
+    status:'СБОЙ: персонажи забыли, кто они друг другу',
+    portrait:'ЗДЕСЬ: крепость, метель, Пугачёв, молодая девушка',
+    intro:'Связи между героями «Капитанской дочки» утеряны. Восстанови их.',
+    task:{ type:'match', question:'Кто кому кто в «Капитанской дочке»?',
+      pairs:[
+        {left:'Пётр Гринёв', right:'Офицер, от чьего имени ведётся рассказ'},
+        {left:'Маша Миронова', right:'Капитанская дочка'},
+        {left:'Пугачёв', right:'Вожак восстания, помиловавший Гринёва'},
+        {left:'Швабрин', right:'Предатель и соперник Гринёва'},
+        {left:'Савельич', right:'Верный слуга Гринёва'}
+      ]
+    },
+    success:'Связи восстановлены. «Береги платье снову, а честь смолоду».' },
+
+  { id:'drama', name:'тень_на_троне.exe', icon:'👑',
+    status:'ПОВРЕЖДЕНИЕ: голоса героев перепутаны',
+    portrait:'ЗДЕСЬ: трон, свечи, тень, монах с летописью',
+    intro:'Три голоса звучат в темноте. Узнай, кому принадлежит каждый.',
+    task:{ type:'match', question:'Соотнеси цитату и героя «Бориса Годунова»',
+      pairs:[
+        {left:'«Достиг я высшей власти...»', right:'Борис Годунов'},
+        {left:'«Ещё одно последнее сказанье...»', right:'Пимен-летописец'},
+        {left:'«Я сам себе присвоил это имя...»', right:'Григорий Отрепьев'},
+        {left:'«Мальчики кровавые в глазах...»', right:'Борис Годунов (в бреду)'},
+        {left:'«Народ безмолвствует»', right:'Ремарка в финале'}
+      ]
+    },
+    success:'Голоса восстановлены. «Да ведают потомки православных / Земли родной минувшую судьбу».' },
+
+  { id:'lirika', name:'тёплый_звук.txt', icon:'🎵',
+    status:'ПОТЕРЯ: строки оторвались от чувств',
+    portrait:'ЗДЕСЬ: зимнее утро, свеча, перо, окно',
+    intro:'Строки Пушкина потеряли своё настроение. Верни каждой — её чувство.',
+    task:{ type:'match', question:'Подбери чувство к пушкинской строке',
+      pairs:[
+        {left:'«Я вас любил: любовь ещё, быть может...»', right:'тихая нежность'},
+        {left:'«Мороз и солнце; день чудесный!»', right:'радость утра'},
+        {left:'«Мчатся тучи, вьются тучи...»', right:'тревога'},
+        {left:'«Что в имени тебе моём?..»', right:'задумчивая грусть'},
+        {left:'«Унылая пора! Очей очарованье!»', right:'светлая печаль'}
+      ]
+    },
+    success:'Строки вернулись к чувствам. «И сердце бьётся в упоенье, / И для него воскресли вновь / И божество, и вдохновенье, / И жизнь, и слёзы, и любовь».' }
+];
+
+/* =========================================================
+   ПРОГРАММЫ
+   ========================================================= */
+const APPS = [
+  { id:'scdb',  name:'СЦДБ.Карта', icon:'🗂️' },
+  { id:'tarot', name:'Оракул.exe', icon:'🎴' },
+  { id:'ball',  name:'Бал.exe', icon:'💃' },
+  { id:'cipher',name:'Тайнопись.exe', icon:'🔐' },
+  { id:'secret',name:'А.С.Пушкин.архив', icon:'📜', secret:true }
+];
+
+/* =========================================================
+   ФИЛИАЛЫ СЦДБ
+   ========================================================= */
+const BRANCHES = [
+  {
+    id:'b1', num:'Центр', name:'Центральная библиотека им. А.С. Пушкина',
+    addr:'ул. Большая Морская, 33', emoji:'🏛️',
+    intro:'Главное здание сети. Крупнейший фонд, редкие издания. Чтобы подключиться, «оживи архив»: соотнеси произведения Пушкина с их жанрами.',
+    task:{
+      type:'match',
+      question:'Соотнеси произведение — жанр',
+      pairs:[
+        {left:'«Евгений Онегин»', right:'роман в стихах'},
+        {left:'«Борис Годунов»', right:'трагедия'},
+        {left:'«Пиковая дама»', right:'повесть'},
+        {left:'«Капитанская дочка»', right:'роман (проза)'},
+        {left:'«Сказка о рыбаке и рыбке»', right:'сказка в стихах'}
+      ]
+    },
+    success:'Архив Центральной библиотеки ожил. Все жанры на своих местах.'
+  },
+  {
+    id:'b2', num:'Фил. №1', name:'Библиотека «Семья и книга»',
+    addr:'ул. Маяковского, 27', emoji:'📖',
+    intro:'Филиал семейного чтения. Здесь книги помогают говорить о чувствах. Соотнеси строку Пушкина с тем чувством, которое она передаёт.',
+    task:{
+      type:'match',
+      question:'Подбери чувство к пушкинской строке',
+      pairs:[
+        {left:'«Я вас любил: любовь ещё, быть может...»', right:'тихая нежность'},
+        {left:'«Мороз и солнце; день чудесный!»', right:'радость утра'},
+        {left:'«Мчатся тучи, вьются тучи...»', right:'тревога'},
+        {left:'«Что в имени тебе моём?..»', right:'задумчивая грусть'},
+        {left:'«Унылая пора! Очей очарованье!»', right:'светлая печаль'}
+      ]
+    },
+    success:'Семейный фонд в порядке. Чувства нашли свои строки.'
+  },
+  {
+    id:'b3', num:'Фил. №2', name:'Детская библиотека истории и культуры Петербурга',
+    addr:'ул. Марата, 72', emoji:'🏰',
+    intro:'Филиал-краевед. Собери путеводитель: соотнеси символ города с его создателем или эпохой.',
+    task:{
+      type:'match',
+      question:'Соотнеси петербургский символ — его создателя или эпоху',
+      pairs:[
+        {left:'Медный всадник', right:'Этьен Фальконе, 1782'},
+        {left:'Петропавловский собор', right:'Доменико Трезини, 1733'},
+        {left:'Казанский собор', right:'Андрей Воронихин, 1811'},
+        {left:'Исаакиевский собор', right:'Огюст Монферран, 1858'},
+        {left:'Летний сад', right:'Пётр I, 1704'}
+      ]
+    },
+    success:'Путеводитель собран. Петербург узнаёт себя.'
+  },
+  {
+    id:'b4', num:'Фил. №3', name:'Детская библиотека иностранной литературы им. М.Д. Яснова',
+    addr:'3-я Советская ул., 8', emoji:'🌍',
+    intro:'Филиал на 22 языках. Соотнеси писателя и страну, которую он представляет.',
+    task:{
+      type:'match',
+      question:'Соотнеси писателя — страну',
+      pairs:[
+        {left:'Уильям Шекспир', right:'Англия'},
+        {left:'Иоганн Вольфганг Гёте', right:'Германия'},
+        {left:'Виктор Гюго', right:'Франция'},
+        {left:'Мигель де Сервантес', right:'Испания'},
+        {left:'Ханс Кристиан Андерсен', right:'Дания'}
+      ]
+    },
+    success:'Писатели вернулись на свои «полки». Языки соединились.'
+  },
+  {
+    id:'b5', num:'Фил. №4', name:'Библиотека на Новгородской',
+    addr:'ул. Новгородская, 5', emoji:'⭐',
+    intro:'Филиал ведёт рукописную книгу «Священная память моей семьи». Восстанови хронологию страниц — от начала войны до Победы.',
+    task:{
+      type:'order',
+      question:'Разложи события истории семьи по хронологии:',
+      lines:[
+        '22 июня 1941 года — начало Великой Отечественной войны',
+        '8 сентября 1941 года — начало блокады Ленинграда',
+        'Январь 1943 года — прорыв блокады (операция «Искра»)',
+        '27 января 1944 года — полное снятие блокады',
+        '9 мая 1945 года — Победа'
+      ]
+    },
+    success:'Книга памяти восстановлена. «Никто не забыт, ничто не забыто».'
+  }
+];
+
+/* =========================================================
+   ТАРО
+   ========================================================= */
+const TAROT = [
+  {n:'Онегин', s:'🎩', full:'Ты ищешь, но не находишь. Внешне всё в порядке, но внутри — пустота. Карта советует: отпусти лишнее, не гонись за блеском.'},
+  {n:'Татьяна', s:'💌', full:'Скажи то, что боишься сказать. Искренность откроет то, что не откроют хитрость и расчёт.'},
+  {n:'Ленский', s:'🌹', full:'Ты слишком горяч. Карта просит остыть, не рубить сплеча. Время смягчит то, что сейчас кажется вечным.'},
+  {n:'Германн', s:'🃏', full:'Ты на перепутье между разумом и желанием. Карта предупреждает: не ставь всё на одну карту.'},
+  {n:'Пиковая дама', s:'👁️', full:'Что-то скрыто от тебя — и раскроется не тогда, когда ты этого ждёшь. Будь внимателен к знакам.'},
+  {n:'Балда', s:'🔨', full:'Простое решение — лучшее. Не усложняй там, где можно обойтись одним точным шагом.'},
+  {n:'Руслан', s:'⚔️', full:'Иди к цели. Дорога будет долгой, но настойчивость приведёт к тому, что потеряно.'},
+  {n:'Людмила', s:'👑', full:'Тебя найдут. А пока — храни верность тому, что дорого, даже если кажется, что всё потеряно.'},
+  {n:'Золотая рыбка', s:'🐟', full:'Желание исполнится — но осторожно с формулировкой. Ты получишь ровно то, о чём попросишь.'},
+  {n:'Старуха', s:'🧓', full:'Жадность возвращается. Карта напоминает: довольствуйся тем, что имеешь, или потеряешь всё.'},
+  {n:'Царевна-Лебедь', s:'🦢', full:'Скоро всё изменится. То, что казалось недостатком, обернётся силой. Будь готов к перемене.'},
+  {n:'Кот учёный', s:'🐈', full:'Слушай истории до конца. Ответ, который ты ищешь, спрятан в чужом опыте.'},
+  {n:'Гришка Отрепьев', s:'🎭', full:'Обман и тень. Не всё то правда, что говорят громко. Проверяй то, что слышишь.'},
+  {n:'Пугачёв', s:'❄️', full:'Ветер перемен. Судьба может помиловать, а может испытать. Будь смел, но не безрассуден.'}
+];
+const TAROT_POSITIONS = ['Прошлое', 'Настоящее', 'Будущее', 'Совет', 'Тайное'];
+
+/* =========================================================
+   ШИФРЫ
+   ========================================================= */
+const PROPHECIES = [
+  "Что пройдёт, то будет мило",
+  "Тьмы низких истин мне дороже нас возвышающий обман",
+  "И жить торопится, и чувствовать спешит",
+  "Унылая пора! Очей очарованье!",
+  "Мороз и солнце; день чудесный!",
+  "Я вас любил: любовь ещё, быть может...",
+  "О сколько нам открытий чудных готовит просвещенья дух",
+  "Служенье муз не терпит суеты",
+  "Мы все учились понемногу чему-нибудь и как-нибудь",
+  "Привычка свыше нам дана: замена счастию она",
+  "Блажен, кто верует, тепло ему на свете!",
+  "Мечты, мечты! Где ваша сладость?"
+];
+
+/* =========================================================
+   ДОСТИЖЕНИЯ
+   ========================================================= */
+const ACHV = {
+  poet:      { icon:'🖋️', title:'Поэт',          hint:'Восстанови первый файл' },
+  dancer:    { icon:'💃', title:'Танцор',        hint:'Пройди бал' },
+  oracle:    { icon:'🔮', title:'Гадатель',      hint:'Сделай расклад Таро' },
+  hacker:    { icon:'💻', title:'Хакер',         hint:'Расшифруй послание' },
+  reader:    { icon:'📚', title:'Читатель СЦДБ', hint:'Подключи все 5 филиалов' },
+  local:     { icon:'🗺️', title:'Краевед',       hint:'Открой карту СЦДБ' },
+  master:    { icon:'🏆', title:'Мастер',        hint:'Восстанови все файлы' },
+  legend:    { icon:'👑', title:'Легенда',       hint:'Открой секретный архив' }
+};
+
+/* =========================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ========================================================= */
+function initBoot(){
+  const lines = [
+    {t:'ПУШКИН.ОС v4.0 — СЦДБ', c:''},
+    {t:'Инициализация ядра... OK', c:'ok'},
+    {t:'Загрузка литературных процессов...', c:''},
+    {t:'Проверка целостности архивов...', c:''},
+    {t:'⚠ Обнаружено 6 повреждённых файлов', c:'warn'},
+    {t:'⚠ Открыты программы: СЦДБ.Карта, Оракул, Бал, Тайнопись', c:'warn'},
+    {t:'', c:''},
+    {t:'Добро пожаловать, администратор.', c:'ok'},
+    {t:'Нажми в любом месте, чтобы войти...', c:''}
+  ];
+  const log = document.getElementById('bootlog'); let i = 0;
+  const t = setInterval(()=>{
+    if (i >= lines.length) { clearInterval(t); return; }
+    const d = document.createElement('div');
+    d.className = 'line ' + lines[i].c;
+    d.textContent = lines[i].t;
+    log.appendChild(d); i++;
+  }, 250);
+}
+
+function initIcons(){
+  const wrap = document.getElementById('icons');
+  wrap.innerHTML = '';
+  FILES.forEach(f => {
+    const el = makeIcon(f.id, f.icon, f.name);
+    if (fixedFiles.has(f.id)) el.classList.add('fixed');
+    wrap.appendChild(el);
+  });
+  APPS.forEach(a => {
+    const el = makeIcon(a.id, a.icon, a.name);
+    if (a.secret) {
+      el.classList.add('secret');
+      if (canUnlockSecret()) el.classList.add('unlocked');
+    }
+    wrap.appendChild(el);
+  });
+}
+
+function makeIcon(id, icon, name){
+  const el = document.createElement('div');
+  el.className = 'icon';
+  el.dataset.id = id;
+  el.innerHTML = `<div class="glyph">${icon}</div><div class="label">${name}</div>`;
+  el.addEventListener('click', () => openWindow(id));
+  return el;
+}
+
+function initStartMenu(){
+  const menu = document.getElementById('startmenu');
+  menu.innerHTML = '';
+  [...FILES, ...APPS.filter(a=>!a.secret)].forEach(f => {
+    const mi = document.createElement('div');
+    mi.className = 'mi';
+    mi.innerHTML = `<span>${f.icon}</span><span>${f.name}</span>`;
+    mi.addEventListener('click', () => { openWindow(f.id); menu.classList.remove('open'); });
+    menu.appendChild(mi);
+  });
+  
+  const reset = document.createElement('div');
+  reset.className = 'mi';
+  reset.innerHTML = `<span>🔄</span><span>Сбросить прогресс</span>`;
+  reset.style.borderTop = '1px solid #c9bfa4';
+  reset.style.marginTop = '6px';
+  reset.addEventListener('click', () => {
+    if(confirm('Точно сбросить весь прогресс?')){
+      localStorage.clear();
+      location.reload();
+    }
+  });
+  menu.appendChild(reset);
+
+  document.getElementById('start').addEventListener('click', e => {
+    e.stopPropagation(); menu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => menu.classList.remove('open'));
+  menu.addEventListener('click', e => e.stopPropagation());
+}
+
+function renderAchv(){
+  const box = document.getElementById('achv');
+  box.innerHTML = '';
+  Object.entries(ACHV).forEach(([k,a]) => {
+    const el = document.createElement('span');
+    el.className = 'a' + (gotAchv.has(k) ? ' on' : '');
+    el.textContent = a.icon;
+    el.title = a.title + (gotAchv.has(k) ? ' ✓' : ' — ' + a.hint);
+    box.appendChild(el);
+  });
+}
+
+function unlock(k){
+  if (gotAchv.has(k)) return;
+  gotAchv.add(k); renderAchv(); saveState();
+  const a = ACHV[k];
+  toast(`🏆 ${a.title}`, a.hint);
+}
+
+function toast(title, sub){
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;bottom:60px;right:16px;background:#12241d;color:#d4af37;
+    border:2px solid #d4af37;border-radius:8px;padding:12px 16px;font-size:12px;
+    z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,.6);animation:pop .3s ease;
+    font-family:'Courier New',monospace;max-width:280px;`;
+  el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">${title}</div><div style="opacity:.85;font-size:11px;">${sub}</div>`;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = 0;
+    setTimeout(() => el.remove(), 400); }, 3200);
+}
+
+/* =========================================================
+   ОКНА
+   ========================================================= */
+function openWindow(id){
+  const file = FILES.find(x => x.id === id);
+  const app = APPS.find(x => x.id === id);
+  if (app && app.secret && !canUnlockSecret()) {
+    toast('🔒 Закрыто', 'Сначала: 6 файлов + 5 филиалов + 3 игры'); return;
+  }
+  const existing = document.querySelector(`.window[data-id="${id}"]`);
+  if (existing) { focusWin(existing); return; }
+
+  const count = document.querySelectorAll('.window').length;
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.dataset.id = id;
+  win.style.left = (80 + (count % 6) * 32) + 'px';
+  win.style.top  = (30  + (count % 6) * 32) + 'px';
+  win.style.zIndex = ++zIndex;
+
+  if (file) renderFile(win, file);
+  else if (app) renderApp(win, app);
+
+  document.getElementById('windows').appendChild(win);
+  makeDraggable(win, win.querySelector('.titlebar'));
+  win.querySelector('.close').addEventListener('click', () => win.remove());
+  win.addEventListener('mousedown', () => focusWin(win));
+}
+
+function makeDraggable(win, handle){
+  let ox=0, oy=0, dragging=false;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('close')) return;
+    dragging = true;
+    ox = e.clientX - win.offsetLeft; oy = e.clientY - win.offsetTop;
+    focusWin(win); e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    win.style.left = Math.max(0, Math.min(window.innerWidth - 100, e.clientX - ox)) + 'px';
+    win.style.top  = Math.max(0, Math.min(window.innerHeight - 80, e.clientY - oy)) + 'px';
+  });
+  document.addEventListener('mouseup', () => dragging = false);
+}
+function focusWin(win){ win.style.zIndex = ++zIndex; }
+
+/* =========================================================
+   РЕНДЕР ЗАДАНИЙ
+   ========================================================= */
+function buildTaskHTML(task){
+  if (task.type === 'quiz') {
+    return `<div class="question">${task.question}</div>` +
+      task.options.map((o,i) => `<button class="option" data-i="${i}">${o}</button>`).join('');
+  }
+  if (task.type === 'order') {
+    const sh = task.lines.map((l,i)=>({l,i})).sort(()=>Math.random()-.5);
+    return `<div class="question">${task.question}</div>` +
+      sh.map(o => `<button class="option line" data-idx="${o.i}">${o.l}</button>`).join('');
+  }
+  if (task.type === 'match') {
+    const lefts = task.pairs.map((p,i)=>({text:p.left, id:i}));
+    const rights = task.pairs.map((p,i)=>({text:p.right, id:i})).sort(()=>Math.random()-.5);
+    return `
+      <div class="question">${task.question}</div>
+      <div class="match-wrap">
+        <div class="match-col" id="matchL">
+          ${lefts.map(l => `<button class="match-item" data-side="L" data-id="${l.id}">${l.text}</button>`).join('')}
+        </div>
+        <div class="match-col" id="matchR">
+          ${rights.map(r => `<button class="match-item" data-side="R" data-id="${r.id}">${r.text}</button>`).join('')}
+        </div>
+      </div>`;
+  }
+  return '';
+}
+
+function attachTaskHandler(win, task, onSolve){
+  if (task.type === 'quiz') {
+    win.querySelectorAll('.option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (+btn.dataset.i === task.correct) {
+          btn.classList.add('correct');
+          win.querySelectorAll('.option').forEach(b => b.disabled = true);
+          onSolve();
+        } else {
+          btn.classList.add('wrong'); btn.disabled = true;
+          setTimeout(()=>btn.classList.remove('wrong'), 500);
+        }
+      });
+    });
+  }
+  else if (task.type === 'order') {
+    let step = 0;
+    const lines = win.querySelectorAll('.line');
+    lines.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        if (+btn.dataset.idx === step) {
+          btn.classList.add('correct'); btn.disabled = true; step++;
+          if (step === task.lines.length) onSolve();
+        } else {
+          btn.classList.add('wrong');
+          if (PROFILE === 'keeper') {
+            setTimeout(() => {
+              btn.classList.remove('wrong');
+              step = 0;
+              lines.forEach(b => { b.classList.remove('correct'); b.disabled = false; });
+            }, 500);
+          } else {
+            setTimeout(()=>btn.classList.remove('wrong'), 500);
+          }
+        }
+      });
+    });
+  }
+  else if (task.type === 'match') {
+    let selL = null, selR = null, matched = 0;
+    const total = task.pairs.length;
+    function tryMatch(){
+      if (selL === null || selR === null) return;
+      const btnL = win.querySelector(`#matchL [data-id="${selL}"]`);
+      const btnR = win.querySelector(`#matchR [data-id="${selR}"]`);
+      if (selL === selR) {
+        btnL.classList.add('matched'); btnL.classList.remove('selected');
+        btnR.classList.add('matched'); btnR.classList.remove('selected');
+        matched++;
+        if (matched === total) onSolve();
+      } else {
+        btnL.classList.add('wrong'); btnR.classList.add('wrong');
+        setTimeout(() => {
+          btnL.classList.remove('wrong','selected'); btnR.classList.remove('wrong','selected');
+        }, 600);
+      }
+      selL = null; selR = null;
+    }
+    win.querySelectorAll('.match-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('matched')) return;
+        const side = btn.dataset.side;
+        if (side === 'L') {
+          if (selL !== null) {
+            const prev = win.querySelector(`#matchL [data-id="${selL}"]`);
+            if (prev) prev.classList.remove('selected');
+          }
+          selL = +btn.dataset.id; btn.classList.add('selected');
+        } else {
+          if (selR !== null) {
+            const prev = win.querySelector(`#matchR [data-id="${selR}"]`);
+            if (prev) prev.classList.remove('selected');
+          }
+          selR = +btn.dataset.id; btn.classList.add('selected');
+        }
+        tryMatch();
+      });
+    });
+  }
+}
+
+function renderFile(win, f){
+  win.innerHTML = `
+    <div class="titlebar"><span>${f.icon} ${f.name}</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait">${f.portrait}</div>
+      <div class="status ${f.statusOk?'ok':''}">${f.status}</div>
+      <div class="intro">${f.intro}</div>
+      ${f.task ? buildTaskHTML(f.task) : ''}
+    </div>`;
+
+  if (f.task) attachTaskHandler(win, f.task, () => solveFile(win, f));
+}
+
+function solveFile(win, f){
+  const box = document.createElement('div');
+  box.className = 'success-box';
+  box.innerHTML = `<b>✓ ФАЙЛ ВОССТАНОВЛЕН</b>${f.success}`;
+  win.querySelector('.window-body').appendChild(box);
+  win.querySelector('.status').classList.add('ok');
+  win.querySelector('.status').textContent = 'СТАТУС: OK';
+
+  if (!fixedFiles.has(f.id)) {
+    fixedFiles.add(f.id); saveState();
+    document.querySelector(`.icon[data-id="${f.id}"]`).classList.add('fixed');
+    unlock('poet');
+    if (fixedFiles.size === 6) { unlock('master'); checkAndUnlockSecret(); }
+  }
+  updateProgress();
+}
+
+/* =========================================================
+   ПРОГРАММЫ
+   ========================================================= */
+function renderApp(win, app){
+  if (app.id === 'scdb')   renderSCDB(win);
+  if (app.id === 'tarot')  renderTarot(win);
+  if (app.id === 'ball')   renderBall(win);
+  if (app.id === 'cipher') renderCipher(win);
+  if (app.id === 'secret') renderSecret(win);
+}
+
+/* --- СЦДБ.Карта --- */
+function renderSCDB(win){
+  win.innerHTML = `
+    <div class="titlebar"><span>🗂️ СЦДБ.Карта — сеть филиалов</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait">ЗДЕСЬ: коллаж — 5 зданий библиотек, соединённых светящимися линиями</div>
+      <p style="font-size:12px;color:#6b6144;">
+        Сеть СЦДБ — 5 узлов: Центральная и 4 филиала. У каждого — своя задача.
+        Пройди все, и читательский билет заполнится штампами.
+      </p>
+      <div class="scdb-grid" id="scdbGrid">
+        ${BRANCHES.map(b => {
+          const done = doneBranches.has(b.id);
+          return `
+            <button class="scdb-node ${done?'done':''}" data-id="${b.id}">
+              <div class="scdb-emoji">${b.emoji}</div>
+              <div class="scdb-num">${b.num}</div>
+              <div class="scdb-name">${b.name}</div>
+              <div class="scdb-addr">${b.addr}</div>
+              ${done ? '<div class="scdb-check">✓ подключён</div>' : '<div class="scdb-off">○ нет связи</div>'}
+            </button>`;
+        }).join('')}
+      </div>
+      <div class="ticket" id="ticket">
+        <div class="ticket-head">📚 Читательский билет СЦДБ</div>
+        <div class="ticket-stamps">
+          ${BRANCHES.map(b => `
+            <div class="stamp ${doneBranches.has(b.id)?'on':''}" title="${b.name}">
+              ${b.emoji}<span>${b.num}</span>
+            </div>`).join('')}
+        </div>
+        <div class="ticket-foot" id="ticketFoot">
+          Подключено филиалов: <b>${doneBranches.size} / ${BRANCHES.length}</b>
+        </div>
+      </div>
+    </div>`;
+
+  win.querySelectorAll('.scdb-node').forEach(node => {
+    node.addEventListener('click', () => {
+      const b = BRANCHES.find(x => x.id === node.dataset.id);
+      if (doneBranches.has(b.id)) { toast('✓ Уже подключён', b.name); return; }
+      openBranch(b, win);
+    });
+  });
+
+  if (!doneApps.has('scdb')) { doneApps.add('scdb'); saveState(); unlock('local'); updateProgress(); }
+}
+
+function openBranch(b, parentWin){
+  const id = 'branch-' + b.id;
+  if (document.querySelector(`.window[data-id="${id}"]`)) return;
+  const count = document.querySelectorAll('.window').length;
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.dataset.id = id;
+  win.style.left = (140 + (count%5)*30) + 'px';
+  win.style.top  = (40  + (count%5)*30) + 'px';
+  win.style.zIndex = ++zIndex;
+  win.style.width = '480px';
+
+  win.innerHTML = `
+    <div class="titlebar"><span>${b.emoji} ${b.name}</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="status">${b.emoji} ${b.addr}</div>
+      <p>${b.intro}</p>
+      ${buildTaskHTML(b.task)}
+    </div>`;
+
+  document.getElementById('windows').appendChild(win);
+  makeDraggable(win, win.querySelector('.titlebar'));
+  win.querySelector('.close').addEventListener('click', () => win.remove());
+  win.addEventListener('mousedown', () => focusWin(win));
+
+  attachTaskHandler(win, b.task, () => branchSolved(b, win, parentWin));
+}
+
+function branchSolved(b, win, parentWin){
+  const box = document.createElement('div');
+  box.className = 'success-box';
+  box.innerHTML = `<b>✓ СВЯЗЬ УСТАНОВЛЕНА</b>${b.success}`;
+  win.querySelector('.window-body').appendChild(box);
+
+  doneBranches.add(b.id); saveState();
+
+  const node = parentWin.querySelector(`.scdb-node[data-id="${b.id}"]`);
+  if (node) {
+    node.classList.add('done');
+    node.querySelector('.scdb-check, .scdb-off').outerHTML = '<div class="scdb-check">✓ подключён</div>';
+  }
+  const stamp = parentWin.querySelectorAll('.stamp')[BRANCHES.findIndex(x=>x.id===b.id)];
+  if (stamp) stamp.classList.add('on');
+  const foot = parentWin.querySelector('#ticketFoot');
+  if (foot) foot.innerHTML = `Подключено филиалов: <b>${doneBranches.size} / ${BRANCHES.length}</b>`;
+
+  toast(`✓ ${b.num} подключён`, b.name);
+
+  if (doneBranches.size === BRANCHES.length && !gotAchv.has('reader')) {
+    unlock('reader'); checkAndUnlockSecret();
+  }
+  updateProgress();
+}
+
+/* --- ТАРО --- */
+function renderTarot(win){
+  // случайные 3 позиции из 5
+  const positions = [...TAROT_POSITIONS].sort(()=>Math.random()-.5).slice(0,3);
+  const spread = [];
+  const pool = [...TAROT];
+  for(let i=0; i<3; i++){
+    const idx = Math.floor(Math.random() * pool.length);
+    spread.push({...pool[idx], pos: positions[i]});
+    pool.splice(idx, 1);
+  }
+
+  win.innerHTML = `
+    <div class="titlebar"><span>🎴 Оракул.exe</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait">ЗДЕСЬ: рука гадалки над картами, свечи, зеркало, перо</div>
+      <p style="text-align:center;font-style:italic;color:#6b6144;">
+        Задай свой вопрос (необязательно) и вытяни три карты.<br>
+        Расклад: <b>${positions.join(' • ')}</b>
+      </p>
+      <div class="input-row">
+        <input type="text" id="tarotQ" placeholder="Твой вопрос к Оракулу...">
+      </div>
+      <div class="tarot-spread" id="spread">
+        ${spread.map((c,i) => `
+          <div class="tcard" data-i="${i}">
+            <div class="tcard-inner">
+              <div class="tcard-face tcard-front">
+                <div class="sym">✦</div>
+                <div>ПУШКИН.ОС</div>
+                <div class="pos">${c.pos}</div>
+              </div>
+              <div class="tcard-face tcard-back">
+                <div class="sym">${c.s}</div>
+                <div class="nm">${c.n}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="reading" id="reading"></div>
+    </div>`;
+
+  let flipped = 0;
+  win.querySelectorAll('.tcard').forEach(card => {
+    card.addEventListener('click', () => {
+      if (card.classList.contains('flipped')) return;
+      card.classList.add('flipped'); flipped++;
+      if (flipped === 3) setTimeout(() => showTarotReading(win, spread, win.querySelector('#tarotQ').value), 700);
+    });
+  });
+}
+
+function showTarotReading(win, spread, question){
+  const r = win.querySelector('#reading');
+  let html = '';
+  if(question.trim()){
+    html += `<div style="margin-bottom:10px;font-weight:bold;color:#12241d;">Твой вопрос: «${question.trim()}»</div>`;
+  }
+  html += '<b style="color:#12241d;font-size:13px;">📖 Толкование</b>';
+  
+  spread.forEach((c, i) => {
+    html += `<h4>${c.pos} — ${c.s} ${c.n}</h4>
+      <div style="font-size:11px;color:#4a4a4a;margin-bottom:10px;">${c.full}</div>`;
+  });
+
+  // Общее послание
+  html += `<div class="total">Судьба складывает эти карты вместе: ${spread[0].n} напоминает о том, что было; ${spread[1].n} говорит о том, что есть; ${spread[2].n} показывает, куда всё идёт. Слушай свой внутренний голос.</div>`;
+  r.innerHTML = html;
+  r.classList.add('show');
+
+  if (!doneApps.has('tarot')) { doneApps.add('tarot'); saveState(); unlock('oracle'); updateProgress(); }
+}
+
+/* --- БАЛ --- */
+function renderBall(win){
+  const moves = [
+    {id:0, ic:'🎩', name:'Поклон'},
+    {id:1, ic:'👗', name:'Реверанс'},
+    {id:2, ic:'💃', name:'Пируэт'},
+    {id:3, ic:'🎻', name:'Вальс'}
+  ];
+
+  let level = 1, maxLevel = 4, sequence = [], userInput = [], accepting = false;
+
+  win.innerHTML = `
+    <div class="titlebar"><span>💃 Бал.exe</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait">ЗДЕСЬ: бальный зал, люстры, пары, свечи, оркестр</div>
+      <p style="font-size:12px;color:#6b6144;font-style:italic;text-align:center;">
+        «Вот бал: весь в огнях, в цветах, в вальсах».<br>
+        Повтори движение за хозяином бала.
+      </p>
+      <div class="ball-stage">
+        <div class="ball-round" id="ballRound">УРОВЕНЬ 1 / ${maxLevel}</div>
+        <div class="ball-status" id="ballStatus">Смотри внимательно...</div>
+        <div class="ball-moves" id="ballMoves">
+          ${moves.map(m => `
+            <button class="ball-move" data-id="${m.id}" disabled>
+              <span class="ic">${m.ic}</span><span>${m.name}</span>
+            </button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  const statusEl = win.querySelector('#ballStatus');
+  const roundEl  = win.querySelector('#ballRound');
+  const buttons  = win.querySelectorAll('.ball-move');
+
+  function randomMove(){ return Math.floor(Math.random()*4); }
+
+  function playSequence(){
+    accepting = false;
+    buttons.forEach(b => b.disabled = true);
+    statusEl.textContent = 'Смотри внимательно...';
+    let i = 0;
+    const tick = setInterval(() => {
+      if (i > 0) buttons.forEach(b => b.classList.remove('lit'));
+      if (i >= sequence.length) {
+        clearInterval(tick);
+        buttons.forEach(b => b.classList.remove('lit'));
+        accepting = true;
+        userInput = [];
+        buttons.forEach(b => b.disabled = false);
+        statusEl.textContent = 'Твой ход!';
+        return;
+      }
+      const btn = win.querySelector(`.ball-move[data-id="${sequence[i]}"]`);
+      btn.classList.add('lit'); i++;
+    }, 550);
+  }
+
+  function startRound(){
+    sequence = [];
+    for (let i = 0; i < level + 1; i++) sequence.push(randomMove());
+    roundEl.textContent = `УРОВЕНЬ ${level} / ${maxLevel}`;
+    setTimeout(playSequence, 500);
+  }
+
+  function finishWin(){
+    const box = document.createElement('div');
+    box.className = 'success-box';
+    box.innerHTML = `<b>✓ БАЛ ЗАВЕРШЁН</b>Ты прошёл все фигуры. «...летит, летит; взглянуть назад не смеет».`;
+    win.querySelector('.window-body').appendChild(box);
+    buttons.forEach(b => b.disabled = true);
+    statusEl.textContent = 'Победа!';
+    if (!doneApps.has('ball')) { doneApps.add('ball'); saveState(); unlock('dancer'); updateProgress(); }
+  }
+
+  function finishLose(){
+    const box = document.createElement('div');
+    box.className = 'success-box';
+    box.style.background = 'linear-gradient(135deg,#fde0e0,#fecaca)';
+    box.style.borderColor = '#c0392b'; box.style.color = '#7f1d1d';
+    box.innerHTML = `<b>✗ СБИЛСЯ С РИТМА</b>Попробуй ещё раз — просто открой «Бал.exe» заново.`;
+    win.querySelector('.window-body').appendChild(box);
+    buttons.forEach(b => b.disabled = true);
+    statusEl.textContent = 'Конец танца.';
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!accepting) return;
+      const id = +btn.dataset.id;
+      userInput.push(id);
+      btn.classList.add('lit');
+      setTimeout(() => btn.classList.remove('lit'), 200);
+
+      const i = userInput.length - 1;
+      if (userInput[i] !== sequence[i]) {
+        accepting = false; buttons.forEach(b => b.disabled = true);
+        setTimeout(finishLose, 500); return;
+      }
+      if (userInput.length === sequence.length) {
+        accepting = false;
+        if (level >= maxLevel) setTimeout(finishWin, 400);
+        else {
+          level++; statusEl.textContent = 'Отлично! Следующий уровень...';
+          setTimeout(startRound, 900);
+        }
+      }
+    });
+  });
+  startRound();
+}
+
+/* --- ШИФР --- */
+function renderCipher(win){
+  // Выбираем случайную фразу
+  const phrase = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
+  // Выбираем случайный тип шифра
+  const cipherType = ['caesar', 'substitution', 'dancing'][Math.floor(Math.random()*3)];
+  
+  let encoded = '';
+  let helpHTML = '';
+  let typeName = '';
+
+  if (cipherType === 'caesar') {
+    typeName = 'Шифр Цезаря (+1)';
+    helpHTML = `Каждая буква заменена на следующую в алфавите (А→Б, Б→В... Я→А). Ё пропущена.`;
+    encoded = caesarEncode(phrase, 1);
+  } else if (cipherType === 'substitution') {
+    typeName = 'Шифр подстановки';
+    // Генерируем случайный алфавит цифр
+    const letters = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
+    const digits = '123456789'.split(''); // упростим, чтобы не путать
+    // Просто присвоим каждой букве двузначное число для красоты
+    const dict = {};
+    for(let i=0; i<letters.length; i++){
+        dict[letters[i]] = String(i+1).padStart(2, '0');
+    }
+    encoded = phrase.toUpperCase().split('').map(ch => dict[ch] ? dict[ch] : ch).join(' ');
+    // Подсказка - первые 5 букв
+    helpHTML = `Каждой букве соответствует число. Вот начало алфавита: <br>
+    <code>А=${dict['А']}, Б=${dict['Б']}, В=${dict['В']}, Г=${dict['Г']}, Д=${dict['Д']}</code>...`;
+  } else {
+    typeName = 'Пляшущие человечки';
+    helpHTML = `Каждому символу соответствует буква. Пробелы сохранены.`;
+    // Простая замена на символы
+    const letters = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
+    const symbols = '☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼'.split('');
+    const dict = {};
+    for(let i=0; i<letters.length; i++){
+        dict[letters[i]] = symbols[i];
+    }
+    encoded = phrase.toUpperCase().split('').map(ch => dict[ch] ? dict[ch] : ch).join(' ');
+    helpHTML = `Этот шифр использовал Конан Дойл в рассказе «Пляшущие человечки». Попробуй угадать буквы по частым повторениям.`;
+  }
+
+  win.innerHTML = `
+    <div class="titlebar"><span>🔐 Тайнопись.exe — Расшифруй свой день</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait">ЗДЕСЬ: шифровальная машина, лампа, бумаги, чернильные пятна</div>
+      
+      <div class="cipher-info">
+        <b>📜 Справка о шифре: ${typeName}</b><br>
+        ${cipherType === 'caesar' ? 'Этот шифр использовал ещё Юлий Цезарь для секретной переписки. В литературе встречается у Свифта и Эдгара По.' : ''}
+        ${cipherType === 'substitution' ? 'Шифры подстановки — одни из древнейших. Ими пользовались алхимики и писатели, чтобы спрятать смысл от непосвящённых.' : ''}
+        ${cipherType === 'dancing' ? 'Шифр из рассказа Артура Конан Дойла «Пляшущие человечки». Символы обозначают буквы.' : ''}
+      </div>
+
+      <p>Система вытянула для тебя случайную строку. Расшифруй её — и узнай своё предсказание.</p>
+
+      <div class="cipher-box">${encoded}</div>
+      
+      <div class="cipher-help">${helpHTML}</div>
+
+      <div class="input-row">
+        <input type="text" id="cipherInput" placeholder="Введи расшифровку...">
+        <button class="btn" id="cipherCheck">Проверить</button>
+      </div>
+      
+      <div id="cipherResult"></div>
+    </div>`;
+
+  const input = win.querySelector('#cipherInput');
+  const btn = win.querySelector('#cipherCheck');
+  const res = win.querySelector('#cipherResult');
+  
+  const clean = (s) => s.toUpperCase().replace(/[^А-ЯЁ\s]/g, '').replace(/\s+/g, ' ').trim();
+  const correctClean = clean(phrase);
+
+  btn.addEventListener('click', () => {
+    if (clean(input.value) === correctClean) {
+      btn.disabled = true; input.disabled = true;
+      btn.style.background = '#2d5a45'; btn.style.color = '#d4af37'; btn.textContent = 'Верно!';
+      
+      res.innerHTML = `
+        <div class="cipher-result">
+          <b>✓ РАСШИФРОВАНО</b>
+          «${phrase}»<br><br>
+          <span style="font-size:11px;">Пусть эта строка станет твоим предсказанием на сегодня. В ней скрыт ответ на твой вопрос.</span>
+        </div>
+      `;
+      res.style.display = 'block';
+      
+      if (!doneApps.has('cipher')) { doneApps.add('cipher'); saveState(); unlock('hacker'); updateProgress(); }
+    } else {
+      input.style.borderColor = '#ef4444';
+      setTimeout(() => input.style.borderColor = '#d4af37', 500);
+      toast('✗ Неверно', 'Попробуй ещё раз. Обрати внимание на таблицу.');
+    }
+  });
+}
+
+function caesarEncode(text, shift) {
+  const alphabet = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+  return text.toUpperCase().split('').map(ch => {
+    const idx = alphabet.indexOf(ch);
+    if (idx === -1) return ch;
+    return alphabet[(idx + shift) % alphabet.length];
+  }).join('');
+}
+
+/* --- СЕКРЕТ --- */
+function canUnlockSecret(){
+  return fixedFiles.size === 6
+    && doneApps.has('tarot')
+    && doneApps.has('ball')
+    && doneApps.has('cipher')
+    && doneBranches.size === BRANCHES.length;
+}
+
+function checkAndUnlockSecret(){
+  if (!canUnlockSecret()) return;
+  const icon = document.querySelector('.icon.secret');
+  if (icon && !icon.classList.contains('unlocked')) {
+    icon.classList.add('unlocked');
+    toast('📜 Секретный архив', 'Появился на рабочем столе');
+  }
+}
+
+function renderSecret(win){
+  win.classList.add('final');
+  win.innerHTML = `
+    <div class="titlebar"><span>📜 А.С.Пушкин.архив</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait">ЗДЕСЬ: Пушкин — перо, свеча, рукопись, заснеженное окно</div>
+      <p><b>Все процессы работают штатно. Все файлы восстановлены. Все филиалы подключены.</b></p>
+      <p>Герои вернулись на свои страницы. Строфы — на места. Бал отзвучал. Карты сданы. Сеть СЦДБ активна.</p>
+      <p style="margin-top:14px; font-style:italic; color:#2d5a45;">
+        «Что дружба? Лёгкий пыл похмелья...» — прошептал кто-то из глубины системы и растворился.
+      </p>
+      <p style="margin-top:18px;"><b>Спасибо, администратор. До новой сессии.</b></p>
+    </div>`;
+  if (!gotAchv.has('legend')) setTimeout(() => unlock('legend'), 400);
+}
+
+function updateProgress(){
+  document.getElementById('progress').textContent =
+    `Файлы: ${fixedFiles.size}/6 • Филиалы: ${doneBranches.size}/${BRANCHES.length} • Игры: ${doneApps.size}/3`;
+}
+
+/* ---------- ЗАПУСК ---------- */
+initBoot();
+initIcons();
+initStartMenu();
+renderAchv();
+updateProgress();
+
+setInterval(() => {
+  const d = new Date(); const p = n => String(n).padStart(2,'0');
+  document.getElementById('clock').textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}, 1000);
+
+if (!PROFILE) {
+  setTimeout(chooseProfile, 3000); // открываем выбор профиля после загрузки
+} else {
+  // обновляем readme
+  setTimeout(() => {
+    const readme = document.querySelector('.icon[data-id="readme"]');
+    if (readme) readme.click();
+    document.querySelector('.window[data-id="readme"]')?.remove();
+  }, 3200);
+}
+</script>
+</body>
+</html>
