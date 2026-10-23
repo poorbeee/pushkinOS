@@ -5,262 +5,242 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>ПУШКИН.ОС v4.0 — СЦДБ</title>
 <style>
+  /* БАЗОВЫЕ НАСТРОЙКИ */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
-  body { font-family: 'Courier New', monospace; background: #000; }
+  body { font-family: Georgia, 'Times New Roman', serif; background: #0a120c; color: #2b2b2b; }
 
-  /* ЗАСТАВКА */
-  #boot { position: fixed; inset: 0; background: #000; color: #4ade80;
-    padding: 20px; font-size: 14px; line-height: 2; z-index: 10000; cursor: pointer; overflow-y: auto; }
+  #boot { position: fixed; inset: 0; background: #0a120c; color: #a3b5a9;
+    padding: 20px; font-family: 'Courier New', monospace; font-size: 14px; line-height: 2; 
+    z-index: 10000; cursor: pointer; overflow-y: auto; }
   #boot .line { opacity: 0; animation: fadeIn .25s forwards; }
-  #boot .warn { color: #fbbf24; } #boot .ok { color: #4ade80; }
+  #boot .warn { color: #d1a352; } #boot .ok { color: #86a38e; }
   @keyframes fadeIn { to { opacity: 1 } }
   #boot.hide { opacity: 0; pointer-events: none; transition: opacity .6s; }
 
   /* РАБОЧИЙ СТОЛ */
   #desktop { position: fixed; inset: 0;
-    background: radial-gradient(circle at 50% 40%, #1b2a4a 0%, #070b14 100%); overflow: hidden; }
-  #desktop::before { content: ''; position: absolute; inset: 0;
-    background-image: linear-gradient(rgba(212,175,55,.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(212,175,55,.04) 1px, transparent 1px);
-    background-size: 40px 40px; pointer-events: none; }
-
-  /* ИКОНКИ */
+    background-color: #0d1710;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4)), 
+      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4));
+    background-size: 20px 20px, 20px 20px, 20px 20px;
+    background-position: 0 0, 0 0, 10px 10px;
+    overflow: hidden; transition: background-image 0.5s ease; }
+  
   #icons { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column;
-    gap: 6px; width: 118px; z-index: 2; bottom: 60px; overflow-y: auto; padding-bottom: 10px; }
+    gap: 12px; width: 100px; z-index: 2; bottom: 60px; overflow-y: auto; padding-bottom: 10px; }
   .icon { position: relative; display: flex; flex-direction: column; align-items: center;
-    padding: 8px 4px; border-radius: 6px; cursor: pointer; color: #e8e4d8; text-align: center;
-    border: 1px solid transparent; transition: .12s; user-select: none; }
-  .icon:hover { background: rgba(255,255,255,.07); border-color: rgba(212,175,55,.4); }
-  .icon .glyph { font-size: 30px; line-height: 1; }
-  .icon .label { font-size: 11px; margin-top: 5px; word-break: break-word; }
-  .icon.fixed::after { content: '✓'; position: absolute; top: 4px; right: 10px;
-    width: 18px; height: 18px; border-radius: 50%; background: #2d5a45; color: #d4af37;
+    padding: 8px 4px; cursor: pointer; color: #dce5df; text-align: center;
+    border: 1px solid transparent; transition: none; user-select: none; }
+  .icon:hover { background: rgba(255,255,255,.05); border: 1px dashed #86a38e; }
+  .icon .glyph { font-size: 32px; line-height: 1; margin-bottom: 4px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.8)); }
+  .icon .label { font-family: 'Courier New', monospace; font-size: 12px; text-shadow: 1px 1px 0 #000; }
+  .icon.fixed::after { content: '✓'; position: absolute; top: 2px; right: 6px;
+    width: 16px; height: 16px; background: #2c4a35; color: #a3b5a9;
+    border: 1px solid #86a38e;
     display: flex; align-items: center; justify-content: center; font-size: 12px;
-    font-weight: bold; box-shadow: 0 0 8px rgba(74,222,128,.6); }
+    font-family: sans-serif; box-shadow: 1px 1px 0 #000; }
   .icon.secret { display: none; }
-  .icon.secret.unlocked { display: flex; animation: pop .5s ease; }
+  .icon.secret.unlocked { display: flex; }
 
   /* ОКНА */
   #windows { position: absolute; inset: 0; pointer-events: none; }
-  .window { position: absolute; width: 520px; pointer-events: auto; background: #f4ecd8;
-    border: 2px solid #12241d; border-radius: 8px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(212,175,55,.25);
-    overflow: hidden; animation: pop .16s ease; display: flex; flex-direction: column; }
-  @keyframes pop { from { transform: scale(.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-  .titlebar { background: linear-gradient(90deg, #12241d, #2d5a45); color: #d4af37;
-    padding: 9px 12px; display: flex; justify-content: space-between; align-items: center;
-    cursor: move; font-size: 13px; user-select: none; border-bottom: 1px solid rgba(212,175,55,.3);
-    flex-shrink: 0; }
-  .close { background: #7f1d1d; color: #fecaca; border: 1px solid #ef4444; width: 24px;
-    height: 24px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
-    line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .close:hover { background: #ef4444; color: #fff; }
-  .window-body { padding: 16px; color: #262626; font-size: 13px; line-height: 1.55;
-    overflow-y: auto; flex-grow: 1; }
-  .window-body p { margin-bottom: 10px; }
-  .portrait { width: 100%; height: 170px; margin-bottom: 14px; border-radius: 6px;
-    background: repeating-linear-gradient(45deg, #e3d9c0, #e3d9c0 12px, #d8cdb0 12px, #d8cdb0 24px);
-    border: 2px dashed #a89877; display: flex; align-items: center; justify-content: center;
-    color: #6b6144; font-size: 11px; text-align: center; padding: 14px; line-height: 1.4; flex-shrink: 0; }
-  .portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
-  .status { background: #0d0d0d; color: #f87171; padding: 7px 10px; font-size: 11px;
-    border-radius: 4px; margin-bottom: 12px; border-left: 3px solid #ef4444; }
-  .status.ok { color: #4ade80; border-left-color: #4ade80; }
-  .question { font-weight: bold; margin: 12px 0 10px; color: #12241d; font-size: 13px; }
-  .option { display: block; width: 100%; text-align: left; background: #fffdf5;
-    border: 1px solid #c9bfa4; color: #262626; padding: 10px 12px; margin-bottom: 7px;
-    border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 12px;
-    transition: .12s; line-height: 1.4; }
-  .option:hover:not(:disabled) { background: #fff8e0; border-color: #d4af37; transform: translateX(2px); }
-  .option.correct { background: #d4f5d4; border-color: #2d5a45; color: #14532d; font-weight: bold; }
-  .option.wrong { background: #fde0e0; border-color: #c0392b; color: #7f1d1d; animation: shake .3s; }
-  .option:disabled { cursor: default; opacity: .85; }
-  @keyframes shake { 25% { transform: translateX(-5px) } 75% { transform: translateX(5px) } }
-  .success-box { background: linear-gradient(135deg, #d4f5d4, #b8e6b8);
-    border: 2px solid #2d5a45; border-radius: 6px; padding: 14px; margin-top: 12px;
-    color: #14532d; font-size: 12px; animation: pop .3s ease; }
-  .success-box b { display: block; margin-bottom: 6px; font-size: 13px; }
-  .input-row { display: flex; gap: 8px; margin: 10px 0; }
-  .input-row input { flex: 1; padding: 10px 12px; border: 2px solid #c9bfa4;
-    border-radius: 5px; font-family: inherit; font-size: 13px; background: #fffdf5; color: #12241d; }
-  .input-row input:focus { outline: none; border-color: #d4af37; }
-  .btn { padding: 10px 16px; background: #d4af37; color: #12241d; border: none;
-    border-radius: 5px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 12px; flex-shrink: 0; }
-  .btn:hover { background: #e8c860; }
-  .btn:disabled { opacity: .5; cursor: default; }
-
-  #taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
-    background: linear-gradient(180deg, #2d5a45, #12241d); border-top: 2px solid #d4af37;
-    display: flex; align-items: center; padding: 0 12px; gap: 14px; color: #d4af37;
-    font-size: 12px; z-index: 9998; box-shadow: 0 -4px 20px rgba(0,0,0,.5); }
-  #start { padding: 7px 12px; background: #d4af37; color: #12241d; font-weight: bold;
-    border-radius: 5px; cursor: pointer; font-size: 12px; letter-spacing: .5px;
-    border: none; font-family: inherit; white-space: nowrap; }
-  #start:hover { background: #e8c860; }
-  #progress { flex: 1; text-align: center; letter-spacing: 1px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #achv { display: flex; gap: 4px; font-size: 16px; display: none; }
-  #achv .a { opacity: .2; filter: grayscale(1); transition: .4s; cursor: help; }
-  #achv .a.on { opacity: 1; filter: none; transform: scale(1.15); }
-  #clock { font-variant-numeric: tabular-nums; opacity: .8; display: none; }
+  .window { position: absolute; width: 520px; pointer-events: auto; background: #e8e0cc;
+    border: 2px solid; border-color: #fff #000 #000 #fff; box-shadow: 4px 4px 0 rgba(0,0,0,0.8);
+    overflow: hidden; display: flex; flex-direction: column; }
   
-  #startmenu { position: absolute; bottom: 52px; left: 12px; background: #f4ecd8;
-    border: 2px solid #12241d; border-radius: 8px; padding: 6px; display: none;
-    min-width: 230px; max-width: 90vw; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,.6); max-height: 70vh; overflow-y: auto; }
-  #startmenu.open { display: block; animation: pop .15s ease; }
-  #startmenu .mi { padding: 10px 12px; cursor: pointer; font-size: 12px; border-radius: 5px;
-    color: #262626; display: flex; gap: 8px; align-items: center; }
-  #startmenu .mi:hover { background: #d4af37; color: #12241d; }
-  .final .titlebar { background: linear-gradient(90deg, #7a5c00, #d4af37); color: #12241d; }
+  .titlebar { background: #1a3324; color: #d1a352;
+    padding: 6px 8px; display: flex; justify-content: space-between; align-items: center;
+    cursor: move; font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; 
+    user-select: none; border-bottom: 2px solid #000; flex-shrink: 0; }
+  
+  .close { background: #1a3324; color: #d1a352; border: 1px solid; border-color: #fff #000 #000 #fff; 
+    width: 20px; height: 20px; cursor: pointer; font-weight: bold; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: sans-serif; }
+  .close:active { border-color: #000 #fff #fff #000; }
+  
+  .window-body { padding: 20px; color: #2b2b2b; font-size: 14px; line-height: 1.6;
+    overflow-y: auto; flex-grow: 1; }
+  .window-body p { margin-bottom: 12px; }
+  
+  .portrait { width: 100%; height: 200px; margin-bottom: 16px;
+    border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0; background: #dcd3bd; padding: 4px; }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; }
+
+  .status { background: #2b2b2b; color: #a3b5a9; padding: 8px 10px; font-size: 12px;
+    font-family: 'Courier New', monospace; margin-bottom: 16px; border: 2px solid;
+    border-color: #000 #fff #fff #000; }
+  .status.ok { color: #86a38e; }
+
+  .question { font-weight: bold; margin: 16px 0 12px; color: #1a3324; font-size: 15px; }
+  .option { display: block; width: 100%; text-align: left; background: #dcd3bd;
+    border: 1px solid #8b7d5b; color: #2b2b2b; padding: 10px 12px; margin-bottom: 8px;
+    cursor: pointer; font-family: inherit; font-size: 14px;
+    box-shadow: 2px 2px 0 #8b7d5b; transition: none; line-height: 1.4; }
+  .option:hover:not(:disabled) { background: #e8e0cc; border-color: #2c4a35; box-shadow: 2px 2px 0 #2c4a35; }
+  .option:active:not(:disabled) { box-shadow: none; transform: translate(2px, 2px); }
+  .option.correct { background: #b8d4be; border-color: #2c4a35; color: #0a120c; box-shadow: none; font-weight: bold; }
+  .option.wrong { background: #e6c1c1; border-color: #7a2323; color: #4a0e0e; box-shadow: none; animation: shake .3s; }
+  .option:disabled { cursor: default; opacity: 0.7; }
+  @keyframes shake { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
+  
+  .success-box { background: #b8d4be; border: 2px solid; border-color: #fff #2c4a35 #2c4a35 #fff;
+    padding: 14px; margin-top: 16px; color: #0a120c; font-size: 13px; }
+  .success-box b { display: block; margin-bottom: 6px; font-size: 14px; font-family: 'Courier New', monospace; }
+
+  .input-row { display: flex; gap: 8px; margin: 12px 0; }
+  .input-row input { flex: 1; padding: 8px 10px; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b;
+    font-family: 'Courier New', monospace; font-size: 14px; background: #fffdf5; color: #1a3324; }
+  .input-row input:focus { outline: none; background: #fff; border-color: #2c4a35 #fff #fff #2c4a35; }
+  
+  .btn { padding: 8px 16px; background: #1a3324; color: #d1a352; border: 2px solid; 
+    border-color: #2c4a35 #000 #000 #2c4a35; cursor: pointer; font-family: 'Courier New', monospace; 
+    font-weight: bold; font-size: 13px; flex-shrink: 0; }
+  .btn:active { border-color: #000 #2c4a35 #2c4a35 #000; background: #0d1710; }
+  .btn:disabled { background: #556b5b; color: #a3b5a9; border-color: #556b5b; cursor: default; }
+  .btn.small { padding: 4px 8px; font-size: 11px; }
+
+  /* ПАНЕЛЬ ЗАДАЧ */
+  #taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
+    background: #1a1a1a; border-top: 2px solid #444;
+    display: flex; align-items: center; padding: 0 6px; gap: 8px; color: #c0c0c0;
+    font-family: 'Courier New', monospace; font-size: 12px; z-index: 9998; }
+  #start { padding: 4px 12px; background: #1a3324; color: #d1a352; font-weight: bold;
+    border: 2px solid; border-color: #2c4a35 #000 #000 #2c4a35; cursor: pointer; font-size: 13px;
+    font-family: inherit; display: flex; align-items: center; gap: 6px; height: 32px; }
+  #start:active { border-color: #000 #2c4a35 #2c4a35 #000; background: #0d1710; }
+  #progress { flex: 1; text-align: left; letter-spacing: 1px; font-size: 12px; white-space: nowrap; 
+    overflow: hidden; text-overflow: ellipsis; padding-left: 10px; color: #86a38e; }
+  #achv { display: flex; gap: 6px; font-size: 16px; display: none; }
+  #achv .a { opacity: .3; filter: grayscale(1); cursor: help; }
+  #achv .a.on { opacity: 1; filter: none; }
+  #clock { font-variant-numeric: tabular-nums; background: #1a1a1a; border: 1px solid; border-color: #000 #444 #444 #000;
+    padding: 4px 12px; color: #e8e0cc; font-size: 12px; }
+  
+  #startmenu { position: absolute; bottom: 48px; left: 6px; background: #e8e0cc;
+    border: 2px solid; border-color: #fff #000 #000 #fff; padding: 4px; display: none;
+    min-width: 240px; z-index: 9999; box-shadow: 4px 4px 0 rgba(0,0,0,0.8); max-height: 70vh; overflow-y: auto; }
+  #startmenu.open { display: block; }
+  #startmenu .mi { padding: 8px 12px; cursor: pointer; font-size: 13px; color: #1a3324; display: flex; gap: 10px; align-items: center; }
+  #startmenu .mi:hover { background: #1a3324; color: #d1a352; }
+  .final .titlebar { background: #4a3b16; color: #d1a352; }
 
   /* ТАРО */
-  .tarot-spread { display: flex; gap: 8px; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
+  .tarot-spread { display: flex; gap: 10px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
   .tcard { width: 130px; height: 200px; perspective: 900px; cursor: pointer; position: relative; }
-  .tcard-inner { position: absolute; inset: 0; transition: transform .7s;
-    transform-style: preserve-3d; }
+  .tcard-inner { position: absolute; inset: 0; transition: transform .6s; transform-style: preserve-3d; }
   .tcard.flipped .tcard-inner { transform: rotateY(180deg); }
   .tcard-face { position: absolute; inset: 0; backface-visibility: hidden;
-    border-radius: 8px; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 8px; text-align: center; font-size: 10px;
-    border: 2px solid #12241d; }
-  .tcard-front { background: linear-gradient(135deg, #12241d, #2d5a45); color: #d4af37; }
-  .tcard-front .sym { font-size: 32px; margin-bottom: 6px; }
-  .tcard-front .pos { font-size: 9px; letter-spacing: 2px; opacity: .8; margin-top: 6px; }
-  .tcard-back { background: #fffdf5; color: #12241d; transform: rotateY(180deg);
-    border-color: #d4af37; justify-content: flex-start; padding-top: 10px; overflow-y: auto; }
-  .tcard-back .sym { font-size: 22px; }
-  .tcard-back .nm { font-weight: bold; font-size: 11px; margin: 2px 0 4px; }
-  .tcard-back .mn { font-size: 9px; line-height: 1.3; color: #4a4a4a; padding: 0 4px; }
-  .reading { margin-top: 12px; padding: 12px; background: #fff8e0;
-    border-left: 3px solid #d4af37; font-size: 12px; border-radius: 4px; display: none; }
-  .reading.show { display: block; animation: pop .3s ease; }
-  .reading h4 { font-size: 12px; color: #12241d; margin: 8px 0 4px; }
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; text-align: center; font-size: 11px; border: 2px solid; }
+  .tcard-front { background: #1a3324; color: #d1a352; border-color: #86a38e #000 #000 #86a38e; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+  .tcard-front .sym { font-size: 36px; margin-bottom: 8px; filter: drop-shadow(0 0 5px rgba(209, 163, 82, 0.5)); }
+  .tcard-front .pos { font-size: 10px; letter-spacing: 2px; opacity: .9; margin-top: 6px; font-family: 'Courier New', monospace;}
+  .tcard-back { background: #e8e0cc; color: #1a3324; transform: rotateY(180deg); border-color: #8b7d5b #fff #fff #8b7d5b; justify-content: flex-start; padding-top: 12px; overflow-y: auto; }
+  .tcard-back .sym { font-size: 24px; }
+  .tcard-back .nm { font-weight: bold; font-size: 12px; margin: 4px 0 6px; }
+  .tcard-back .mn { font-size: 10px; line-height: 1.3; color: #4a4a4a; padding: 0 6px; }
+  .reading { margin-top: 16px; padding: 14px; background: #dcd3bd; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b; font-size: 13px; display: none; }
+  .reading.show { display: block; }
+  .reading h4 { font-size: 14px; color: #1a3324; margin: 10px 0 6px; }
   .reading h4:first-child { margin-top: 0; }
-  .reading .total { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d4af37;
-    font-style: italic; color: #7a5c00; }
+  .reading .total { margin-top: 12px; padding-top: 12px; border-top: 2px dashed #8b7d5b; font-style: italic; color: #1a3324; }
 
   /* БАЛ */
-  .ball-stage { background: linear-gradient(180deg, #2a1810, #0d0808);
-    border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 12px;
-    border: 1px solid #d4af37; position: relative; overflow: hidden; }
-  .ball-stage::before { content: ''; position: absolute; inset: 0;
-    background: radial-gradient(circle at 50% 0%, rgba(212,175,55,.15) 0%, transparent 60%); }
-  .ball-stage > * { position: relative; }
-  .ball-round { color: #d4af37; font-size: 12px; letter-spacing: 2px; margin-bottom: 8px; }
-  .ball-status { color: #e8e4d8; font-size: 12px; min-height: 22px; margin-bottom: 10px;
-    font-style: italic; }
-  .ball-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .ball-move { padding: 12px 6px; border-radius: 8px; border: 2px solid #12241d;
-    background: #fffdf5; color: #12241d; cursor: pointer; font-family: inherit;
-    font-size: 12px; font-weight: bold; transition: .12s; display: flex;
-    flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-  .ball-move:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212,175,55,.3); }
+  .ball-stage { background: #1a3324; border: 2px solid; border-color: #000 #86a38e #86a38e #000; padding: 16px; text-align: center; margin-bottom: 16px; }
+  .ball-round { color: #d1a352; font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px; margin-bottom: 10px; }
+  .ball-status { color: #e8e0cc; font-size: 13px; min-height: 22px; margin-bottom: 12px; font-style: italic; }
+  .ball-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ball-move { padding: 12px 8px; background: #dcd3bd; color: #1a3324; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: none; }
+  .ball-move:active:not(:disabled) { border-color: #8b7d5b #fff #fff #8b7d5b; }
   .ball-move:disabled { opacity: .5; cursor: default; }
-  .ball-move.lit { background: #d4af37; color: #12241d; transform: scale(1.05);
-    box-shadow: 0 0 20px #d4af37; }
+  .ball-move.lit { background: #d1a352; color: #1a3324; border-color: #fff #8b7d5b #8b7d5b #fff; box-shadow: inset 0 0 15px rgba(255,255,255,0.5); }
   .ball-move .ic { font-size: 24px; }
 
   /* ШИФР */
-  .cipher-info { background: #f0e6cc; border-left: 3px solid #7a5c00; padding: 10px 12px;
-    border-radius: 4px; font-size: 11px; margin-bottom: 12px; color: #4a3a10; line-height: 1.5; }
-  .cipher-info b { color: #12241d; }
-  .cipher-box { background: #0d0d0d; color: #4ade80; padding: 14px; border-radius: 6px;
-    font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px;
-    text-align: center; margin: 12px 0; border: 1px solid #2d5a45; word-break: break-all;
-    line-height: 1.6; }
-  .cipher-help { background: #fffdf5; border: 1px dashed #c9bfa4; padding: 10px;
-    border-radius: 4px; font-size: 11px; color: #4a4a4a; margin: 10px 0; line-height: 1.5; }
-  .cipher-help code { background: #f0e6cc; padding: 2px 6px; border-radius: 3px;
-    font-family: 'Courier New', monospace; color: #12241d; }
-  .cipher-result { margin-top: 12px; padding: 14px; background: #fff8e0;
-    border-left: 3px solid #d4af37; border-radius: 4px; font-size: 12px;
-    font-style: italic; color: #7a5c00; line-height: 1.6; }
-  .cipher-result b { font-style: normal; color: #12241d; display: block; margin-bottom: 6px; }
+  .cipher-info { background: #1a3324; color: #d1a352; border: 2px solid; border-color: #fff #000 #000 #fff; padding: 10px 14px; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 16px; line-height: 1.5; }
+  .cipher-box { background: #0d1710; color: #86a38e; padding: 16px; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 2px; text-align: center; margin: 16px 0; border: 2px solid; border-color: #000 #86a38e #86a38e #000; word-break: break-all; line-height: 1.6; }
+  .cipher-help { background: #dcd3bd; border: 1px dashed #8b7d5b; padding: 12px; font-size: 12px; color: #2b2b2b; margin: 12px 0; line-height: 1.5; }
+  .cipher-help code { background: #e8e0cc; padding: 2px 6px; font-family: 'Courier New', monospace; color: #1a3324; border: 1px solid #8b7d5b; }
+  .cipher-result { margin-top: 16px; padding: 16px; background: #fffdf5; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b; font-size: 14px; font-style: italic; color: #1a3324; line-height: 1.6; }
+  .cipher-result b { font-style: normal; display: block; margin-bottom: 8px; font-family: 'Courier New', monospace; }
 
   /* СООТНЕСИ */
-  .match-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; }
-  .match-col { display: flex; flex-direction: column; gap: 6px; }
-  .match-item { padding: 8px 10px; background: #fffdf5; border: 2px solid #c9bfa4;
-    border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 11px;
-    text-align: left; transition: .12s; color: #262626; line-height: 1.35; }
-  .match-item:hover:not(.matched) { border-color: #d4af37; background: #fff8e0; }
-  .match-item.selected { background: #d4af37; color: #12241d; border-color: #7a5c00;
-    font-weight: bold; }
-  .match-item.matched { background: #d4f5d4; border-color: #2d5a45; color: #14532d;
-    cursor: default; opacity: .85; }
-  .match-item.wrong { animation: shake .3s; background: #fde0e0; border-color: #c0392b; }
+  .match-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .match-col { display: flex; flex-direction: column; gap: 8px; }
+  .match-item { padding: 10px 12px; background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; cursor: pointer; font-family: inherit; font-size: 12px; text-align: left; color: #2b2b2b; line-height: 1.35; transition: none; }
+  .match-item:hover:not(.matched) { border-color: #fff #1a3324 #1a3324 #fff; background: #e8e0cc; }
+  .match-item.selected { background: #d1a352; color: #1a3324; border-color: #fff #4a3b16 #4a3b16 #fff; font-weight: bold; }
+  .match-item.matched { background: #b8d4be; border-color: #fff #2c4a35 #2c4a35 #fff; color: #0a120c; cursor: default; opacity: .9; }
+  .match-item.wrong { animation: shake .3s; background: #e6c1c1; border-color: #fff #7a2323 #7a2323 #fff; }
 
   /* СЦДБ */
-  .scdb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
-  .scdb-node { background: #fffdf5; border: 2px solid #c9bfa4; border-radius: 8px;
-    padding: 10px 6px; cursor: pointer; font-family: inherit; text-align: center;
-    transition: .15s; color: #262626; }
-  .scdb-node:hover { transform: translateY(-2px); border-color: #d4af37;
-    box-shadow: 0 6px 18px rgba(0,0,0,.15); }
-  .scdb-node.done { background: linear-gradient(135deg, #d4f5d4, #b8e6b8);
-    border-color: #2d5a45; }
-  .scdb-emoji { font-size: 24px; line-height: 1; margin-bottom: 4px; }
-  .scdb-num { font-size: 10px; color: #6b6144; letter-spacing: 1px; }
-  .scdb-name { font-size: 11px; font-weight: bold; margin: 2px 0; }
-  .scdb-addr { font-size: 9px; color: #8a8065; }
-  .scdb-off { font-size: 10px; color: #a89877; margin-top: 4px; }
-  .scdb-check { font-size: 10px; color: #14532d; font-weight: bold; margin-top: 4px; }
-  .ticket { margin-top: 14px; background: #fff8e0; border: 2px dashed #d4af37;
-    border-radius: 8px; padding: 10px; }
-  .ticket-head { font-weight: bold; color: #12241d; margin-bottom: 8px;
-    font-size: 12px; text-align: center; letter-spacing: 1px; }
-  .ticket-stamps { display: flex; justify-content: space-around; gap: 4px; flex-wrap: wrap; }
-  .stamp { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed #c9bfa4;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 14px; color: #a89877; opacity: .4; transition: .3s;
-    background: #fffdf5; }
-  .stamp span { font-size: 8px; }
-  .stamp.on { opacity: 1; border-style: solid; border-color: #2d5a45;
-    color: #14532d; background: #d4f5d4; transform: rotate(-4deg); }
-  .ticket-foot { text-align: center; margin-top: 8px; font-size: 11px; color: #6b6144; }
+  .scdb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .scdb-node { background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; padding: 10px 6px; cursor: pointer; font-family: inherit; text-align: center; color: #2b2b2b; }
+  .scdb-node:hover { background: #e8e0cc; }
+  .scdb-node:active { border-color: #8b7d5b #fff #fff #8b7d5b; }
+  .scdb-node.done { background: #b8d4be; border-color: #fff #2c4a35 #2c4a35 #fff; }
+  .scdb-emoji { font-size: 24px; margin-bottom: 6px; filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.3)); }
+  .scdb-num { font-family: 'Courier New', monospace; font-size: 11px; color: #4a3b16; font-weight: bold; }
+  .scdb-name { font-size: 12px; font-weight: bold; margin: 4px 0; }
+  .scdb-addr { font-size: 10px; color: #5a5a5a; }
+  .scdb-off { font-family: 'Courier New', monospace; font-size: 10px; color: #7a2323; margin-top: 6px; }
+  .scdb-check { font-family: 'Courier New', monospace; font-size: 10px; color: #0a120c; font-weight: bold; margin-top: 6px; }
 
+  .ticket { margin-top: 20px; background: #fffdf5; border: 2px dashed #8b7d5b; padding: 12px; }
+  .ticket-head { font-weight: bold; color: #1a3324; margin-bottom: 12px; font-size: 13px; text-align: center; letter-spacing: 1px; }
+  .ticket-stamps { display: flex; justify-content: space-around; gap: 6px; flex-wrap: wrap; }
+  .stamp { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed #8b7d5b; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; color: #8b7d5b; opacity: .4; background: #e8e0cc; }
+  .stamp span { font-family: 'Courier New', monospace; font-size: 9px; margin-top: 2px; }
+  .stamp.on { opacity: 1; border-style: solid; border-color: #2c4a35; color: #1a3324; background: #b8d4be; }
+  .ticket-foot { text-align: center; margin-top: 12px; font-size: 12px; color: #4a3b16; font-weight: bold; }
+
+  /* НАСТРОЙКИ (ОБОИ) */
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .wp-card { background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .wp-card.locked { opacity: 0.6; background: #c4bba7; }
+  .wp-preview { width: 100%; height: 80px; background: #1a3324; border: 1px solid #8b7d5b; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .wp-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .wp-lock { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #d1a352; font-weight: bold; font-family: 'Courier New', monospace; font-size: 11px; text-align: center; padding: 4px; }
+  .wp-lock .ic { font-size: 20px; margin-bottom: 4px; }
+  .wp-actions { display: flex; gap: 4px; }
+  .wp-actions button { flex: 1; }
+  
   /* ПРОФИЛЬ */
-  .profile-card { padding: 14px; background: #fffdf5; border: 2px solid #c9bfa4;
-    border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: .15s; }
-  .profile-card:hover { border-color: #d4af37; transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,.15); }
-  .profile-card h3 { font-size: 14px; color: #12241d; margin-bottom: 6px; }
-  .profile-card p { font-size: 11px; color: #6b6144; line-height: 1.5; }
+  .profile-card { padding: 16px; background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; margin-bottom: 12px; cursor: pointer; transition: none; }
+  .profile-card:hover { background: #e8e0cc; }
+  .profile-card:active { border-color: #8b7d5b #fff #fff #8b7d5b; }
+  .profile-card h3 { font-size: 16px; color: #1a3324; margin-bottom: 8px; font-family: 'Courier New', monospace; }
+  .profile-card p { font-size: 13px; color: #2b2b2b; line-height: 1.5; }
 
   /* МОБИЛЬНАЯ ВЕРСИЯ */
   @media (max-width: 768px) {
-    #icons { position: absolute; top: 10px; left: 10px; right: 10px; bottom: auto;
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: auto;
-      overflow-y: visible; padding-bottom: 0; z-index: 10; }
-    .icon { padding: 10px 4px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.05); }
-    .icon .glyph { font-size: 28px; }
-    .icon .label { font-size: 10px; }
-    .icon.fixed::after { top: 2px; right: 2px; }
-
-    .window { position: absolute; left: 50% !important; top: 50% !important;
-      transform: translate(-50%, -50%) !important; width: calc(100% - 20px) !important;
-      max-height: calc(100% - 100px) !important; margin: 0; }
-    .titlebar { cursor: default; padding: 10px 12px; font-size: 14px; }
-    .close { width: 28px; height: 28px; }
-    .window-body { padding: 14px; font-size: 14px; }
-    .portrait { height: 140px; }
-
-    #taskbar { height: 52px; gap: 8px; padding: 0 8px; }
-    #start { padding: 8px 10px; font-size: 11px; }
-    #progress { font-size: 10px; }
-    .option { padding: 12px; font-size: 13px; }
-    .input-row { flex-direction: column; }
-    .btn { width: 100%; padding: 12px; font-size: 14px; }
-    .input-row input { padding: 12px; font-size: 14px; }
-
-    .tarot-spread { gap: 6px; }
-    .tcard { width: 30%; height: 160px; }
-    .tcard-back .mn { font-size: 8px; }
-    .match-wrap { grid-template-columns: 1fr; gap: 10px; }
-    .match-item { font-size: 12px; padding: 10px; }
-    .scdb-grid { grid-template-columns: 1fr; }
-    .ball-move { padding: 14px 8px; }
-    .cipher-box { font-size: 13px; letter-spacing: 1px; padding: 12px; }
+    #icons { position: absolute; top: 10px; left: 10px; right: 10px; bottom: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: auto; overflow-y: visible; padding-bottom: 0; z-index: 10; }
+    .icon { padding: 10px 4px; background: rgba(13, 23, 16, 0.8); border: 1px solid #2c4a35; }
+    .window { position: absolute; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; width: calc(100% - 16px) !important; max-height: calc(100% - 80px) !important; margin: 0; box-shadow: 6px 6px 0 rgba(0,0,0,0.8); }
+    .titlebar { cursor: default; padding: 8px 10px; font-size: 14px; }
+    .close { width: 24px; height: 24px; }
+    .window-body { padding: 16px; font-size: 14px; }
+    .portrait { height: 150px; }
+    #taskbar { height: 50px; gap: 6px; padding: 0 6px; }
+    #start { padding: 6px 10px; font-size: 12px; height: 36px; }
+    #progress { font-size: 11px; padding-left: 4px; }
+    .option { padding: 12px; font-size: 14px; }
+    .input-row { flex-direction: column; gap: 10px; }
+    .btn { width: 100%; padding: 12px; font-size: 15px; }
+    .input-row input { padding: 10px; font-size: 15px; }
+    .tarot-spread { gap: 8px; }
+    .tcard { width: 31%; height: 170px; }
+    .tcard-back .mn { font-size: 9px; }
+    .match-wrap { grid-template-columns: 1fr; gap: 12px; }
+    .match-item { font-size: 13px; padding: 12px; }
+    .scdb-grid { grid-template-columns: 1fr; gap: 8px; }
+    .ball-move { padding: 14px 8px; font-size: 14px; }
+    .cipher-box { font-size: 14px; letter-spacing: 1px; padding: 12px; }
+    .settings-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -271,12 +251,14 @@
 <div id="desktop">
   <div id="icons"></div>
   <div id="windows"></div>
+  
   <div id="taskbar">
     <button id="start">⊞ ПУШКИН.ОС</button>
     <div id="progress">Загрузка...</div>
     <div id="achv"></div>
     <div id="clock">--:--:--</div>
   </div>
+  
   <div id="startmenu"></div>
 </div>
 
@@ -285,6 +267,7 @@
    СОСТОЯНИЕ И ПРОФИЛЬ
    ========================================================= */
 let PROFILE = localStorage.getItem('pushkin_profile') || null;
+let CURRENT_WALLPAPER = localStorage.getItem('pushkin_wallpaper') || 'default';
 let zIndex = 10;
 
 const fixedFiles = new Set(JSON.parse(localStorage.getItem('pushkin_fixedFiles') || '[]'));
@@ -299,6 +282,37 @@ function saveState(){
   localStorage.setItem('pushkin_gotAchv', JSON.stringify([...gotAchv]));
 }
 
+/* =========================================================
+   СПИСОК ОБОЕВ
+   ========================================================= */
+const WALLPAPERS = [
+  { id: 'default', name: 'Сеть СЦДБ', url: '', mobileUrl: '', req: 0 },
+  { id: 'bg1', name: 'Тайны Лукоморья', url: 'img/bg1.jpg', mobileUrl: 'img/bg1_mobile.jpg', req: 2 },
+  { id: 'bg2', name: 'Бальный зал', url: 'img/bg2.jpg', mobileUrl: 'img/bg2_mobile.jpg', req: 4 },
+  { id: 'bg3', name: 'Архив Пушкина', url: 'img/bg3.jpg', mobileUrl: 'img/bg3_mobile.jpg', req: 6 },
+  { id: 'bg4', name: 'Ночной Петербург', url: 'img/bg4.jpg', mobileUrl: 'img/bg4_mobile.jpg', req: 8 }
+];
+
+function applyWallpaper() {
+  const wp = WALLPAPERS.find(w => w.id === CURRENT_WALLPAPER) || WALLPAPERS[0];
+  const desk = document.getElementById('desktop');
+  const isMobile = window.innerWidth <= 768;
+  const imgUrl = isMobile ? wp.mobileUrl : wp.url;
+
+  if (imgUrl) {
+    desk.style.backgroundImage = `url('${imgUrl}')`;
+    desk.style.backgroundSize = 'cover';
+    desk.style.backgroundPosition = 'center';
+  } else {
+    desk.style.backgroundImage = `
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4)), 
+      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4))
+    `;
+    desk.style.backgroundSize = '20px 20px, 20px 20px, 20px 20px';
+  }
+}
+
 function chooseProfile(){
   const win = document.createElement('div');
   win.className = 'window';
@@ -310,7 +324,7 @@ function chooseProfile(){
   win.innerHTML = `
     <div class="titlebar"><span>👤 Выбор профиля</span></div>
     <div class="window-body">
-      <p style="margin-bottom:14px;">Прежде чем войти, выбери свой путь.</p>
+      <p style="margin-bottom:16px;">Прежде чем войти, выбери свой путь.</p>
       <div class="profile-card" data-profile="intern">
         <h3>🎓 Стажёр</h3>
         <p>Подсказки включены. Ошибки не сбрасывают прогресс. Идеально для знакомства.</p>
@@ -337,16 +351,16 @@ function chooseProfile(){
    ========================================================= */
 const FILES = [
   { id:'readme', name:'ПРОЧТИ_МЕНЯ.txt', icon:'📄', status:'ФАЙЛ ЧИТАЕМ', statusOk:true,
-    portrait:'ЗДЕСЬ: коллаж — перо, чернильница, старая книга',
+    portrait:'<img src="img/11.jpg" alt="Пушкин">',
     intro:`<p><b>ПУШКИН.ОС v4.0</b> — операционная система литературного архива СЦДБ.</p>
-      <p>Произошёл сбой: <b>6 файлов повреждены</b>. Имена файлов искажены — но внутри спрятаны герои и сюжеты. На рабочем столе также: <b>СЦДБ.Карта</b>, <b>Оракул</b>, <b>Бал</b> и <b>Тайнопись</b>.</p>
+      <p>Произошёл сбой: <b>6 файлов повреждены</b>. Имена файлов искажены — но внутри спрятаны герои и сюжеты. На рабочем столе также: <b>СЦДБ.Карта</b>, <b>Оракул</b>, <b>Бал</b>, <b>Тайнопись</b> и <b>Настройки</b>.</p>
       <p>Восстанови 6 файлов, подключи 5 филиалов, пройди 3 программы — и откроется секретный архив.</p>
       <p style="opacity:.65;font-size:11px;margin-top:14px;">Выбран профиль: <b>${PROFILE === 'intern' ? '🎓 Стажёр' : '🗝️ Хранитель'}</b>. Сменить можно в меню «ПУШКИН.ОС».</p>`,
     task:null },
 
   { id:'onegin', name:'лишний_гость.exe', icon:'⚙️',
     status:'ERROR 0x1812: среди событий затесался чужак',
-    portrait:'ЗДЕСЬ: бальный зал, силуэт в цилиндре, свечи',
+    portrait:'<img src="img/5.jpg" alt="Онегин">',
     intro:'В памяти процесса — 6 событий. Пять из одного романа, одно — из другого произведения. Найди чужака.',
     task:{ type:'quiz', question:'Какое событие НЕ из «Евгения Онегина»?',
       options:[
@@ -362,7 +376,7 @@ const FILES = [
 
   { id:'skazka', name:'три_желания.exe', icon:'🐟',
     status:'КОНФЛИКТ: герои перепутали поступки',
-    portrait:'ЗДЕСЬ: синее море, старик и старуха, разбитое корыто',
+    portrait:'<img src="img/6.jpg" alt="Сказка">',
     intro:'Процесс перепутал, кто из героев что сделал. Восстанови справедливость.',
     task:{ type:'match', question:'Соотнеси героя и его поступок (из «Сказки о рыбаке и рыбке»)',
       pairs:[
@@ -377,7 +391,7 @@ const FILES = [
 
   { id:'poema', name:'голова_и_меч.exe', icon:'⚔️',
     status:'ПОТЕРЯ: герой забыл свой путь',
-    portrait:'ЗДЕСЬ: богатырь, гигантская голова, меч, туман',
+    portrait:'<img src="img/7.jpg" alt="Руслан">',
     intro:'Герой поэмы прошёл через испытания, но память его повреждена. Восстанови цепочку.',
     task:{ type:'order', question:'Расставь события поэмы «Руслан и Людмила» по порядку:',
       lines:[
@@ -392,7 +406,7 @@ const FILES = [
 
   { id:'proza', name:'капитанская_дочь.log', icon:'📜',
     status:'СБОЙ: персонажи забыли, кто они друг другу',
-    portrait:'ЗДЕСЬ: крепость, метель, Пугачёв, молодая девушка',
+    portrait:'<img src="img/8.jpg" alt="Капитанская дочка">',
     intro:'Связи между героями «Капитанской дочки» утеряны. Восстанови их.',
     task:{ type:'match', question:'Кто кому кто в «Капитанской дочке»?',
       pairs:[
@@ -407,8 +421,8 @@ const FILES = [
 
   { id:'drama', name:'тень_на_троне.exe', icon:'👑',
     status:'ПОВРЕЖДЕНИЕ: голоса героев перепутаны',
-    portrait:'ЗДЕСЬ: трон, свечи, тень, монах с летописью',
-    intro:'В темноте звучат голоса. Каждому из них принадлежит своя строка. Соотнеси реплики и персонажей.',
+    portrait:'<img src="img/9.jpg" alt="Борис Годунов">',
+    intro:'В темноте звучат голоса. Каждому из них принадлежит своя строка. Соотнеси реплики и персонажей.<br><br><i>Подсказка: Борис Годунов видит кровавых мальчиков, а народ в финале молчит.</i>',
     task:{ type:'match', question:'Соотнеси цитату и героя «Бориса Годунова»',
       pairs:[
         {left:'«Достиг я высшей власти...»', right:'Борис Годунов'},
@@ -422,7 +436,7 @@ const FILES = [
 
   { id:'lirika', name:'тёплый_звук.txt', icon:'🎵',
     status:'ПОТЕРЯ: строки оторвались от чувств',
-    portrait:'ЗДЕСЬ: зимнее утро, свеча, перо, окно',
+    portrait:'<img src="img/10.jpg" alt="Лирика">',
     intro:'Строки Пушкина потеряли своё настроение. Верни каждой — её чувство.',
     task:{ type:'match', question:'Подбери чувство к пушкинской строке',
       pairs:[
@@ -444,11 +458,12 @@ const APPS = [
   { id:'tarot', name:'Оракул.exe', icon:'🎴' },
   { id:'ball',  name:'Бал.exe', icon:'💃' },
   { id:'cipher',name:'Тайнопись.exe', icon:'🔐' },
+  { id:'settings', name:'Настройки.exe', icon:'⚙️' },
   { id:'secret',name:'А.С.Пушкин.архив', icon:'📜', secret:true }
 ];
 
 /* =========================================================
-   ФИЛИАЛЫ СЦДБ (ФИШКИ)
+   ФИЛИАЛЫ СЦДБ
    ========================================================= */
 const BRANCHES = [
   {
@@ -470,23 +485,23 @@ const BRANCHES = [
   {
     id:'b2', num:'Фил. №1', name:'Библиотека «Семья и книга»',
     addr:'ул. Маяковского, 27', emoji:'📖',
-    intro:'Филиал семейного чтения. Главная фишка — огромный фонд комиксов и графических романов, а также коллекция фантастики Тагильцева. Здесь через комиксы читатели приходят к большой фантастике. Соотнеси современный комикс и классический сюжет, на который он опирается.',
+    intro:'Филиал семейного чтения. Главная фишка — огромный фонд комиксов и графических романов, а также коллекция фантастики. Соотнеси популярный комикс и его жанр.',
     task:{
-      type:'match', question:'Соотнеси комикс/графический роман и классическую фантастику',
+      type:'match', question:'Соотнеси комикс/графический роман и его жанр',
       pairs:[
-        {left:'«Хранители» (Watchmen)', right:'Деконструкция супергероики (как у Стругацких)'},
-        {left:'«Сага» (Saga)', right:'Космоопера о беглецах (как у Саймака)'},
-        {left:'«Песочный человек» (Sandman)', right:'Мифы и сны (как у Геймана)'},
-        {left:'«Болотная тварь» (Swamp Thing)', right:'Экология и мутация (как у Уэллса)'},
-        {left:'«Акира» (Akira)', right:'Киберпанк и эксперименты (как у Дика)'}
+        {left:'«Хильда»', right:'Скандинавские мифы'},
+        {left:'«Гравити Фолз»', right:'Мистика и приключения'},
+        {left:'«Аватар: Легенда об Аанге»', right:'Магия стихий'},
+        {left:'«Сага»', right:'Космическая фантастика'},
+        {left:'«Дневник слабака»', right:'Реализм и школа'}
       ]
     },
-    success:'Семейный фонд в порядке. Комиксы нашли свой путь к фантастике.'
+    success:'Семейный фонд в порядке. Комиксы нашли свои жанры!'
   },
   {
     id:'b3', num:'Фил. №2', name:'Детская библиотека истории и культуры Петербурга',
     addr:'ул. Марата, 72', emoji:'🏰',
-    intro:'Филиал находится в знаменитом Доме Бажанова — памятнике северного модерна. Здесь проходят краеведческие лекции. Пройдись по залам особняка: найди, что в нём есть на самом деле, а что — выдумка.',
+    intro:'Филиал находится в знаменитом Доме Бажанова — памятнике северного модерна. Пройдись по залам особняка: найди, что в нём есть на самом деле, а что — выдумка.',
     task:{
       type:'quiz', question:'Чего НЕТ в особняке Бажанова?',
       options:[
@@ -502,11 +517,16 @@ const BRANCHES = [
   {
     id:'b4', num:'Фил. №3', name:'Детская библиотека иностранной литературы им. М.Д. Яснова',
     addr:'3-я Советская ул., 8', emoji:'🌍',
-    intro:'В фонде этого филиала — книги на 57 языках мира! Здесь работают с переводами и проводят конкурсы юных переводчиков. Проверь свою языковую интуицию.',
+    intro:'В фонде этого филиала — книги на 57 языках мира! Давай проверим твою языковую интуицию. Соотнеси слово «Привет» и язык, на котором оно звучит.',
     task:{
-      type:'quiz', question:'На каком языке роман «Приключения Тома Сойера» Марка Твена звучит как «Tom Sawyerin seikkailut»?',
-      options:['На финском','На шведском','На немецком','На французском'],
-      correct:0
+      type:'match', question:'Соотнеси слово «Привет» и язык',
+      pairs:[
+        {left:'Hello', right:'Английский'},
+        {left:'Bonjour', right:'Французский'},
+        {left:'Hallo', right:'Немецкий'},
+        {left:'Ciao', right:'Итальянский'},
+        {left:'Hola', right:'Испанский'}
+      ]
     },
     success:'Языковая интуиция на высоте. 57 языков — это не шутка!'
   },
@@ -531,20 +551,20 @@ const BRANCHES = [
    ТАРО
    ========================================================= */
 const TAROT = [
-  {n:'Онегин', s:'🎩', full:'Ты ищешь, но не находишь. Внешне всё в порядке, но внутри — пустота. Карта советует: отпусти лишнее, не гонись за блеском.'},
-  {n:'Татьяна', s:'💌', full:'Скажи то, что боишься сказать. Искренность откроет то, что не откроют хитрость и расчёт.'},
-  {n:'Ленский', s:'🌹', full:'Ты слишком горяч. Карта просит остыть, не рубить сплеча. Время смягчит то, что сейчас кажется вечным.'},
-  {n:'Германн', s:'🃏', full:'Ты на перепутье между разумом и желанием. Карта предупреждает: не ставь всё на одну карту.'},
-  {n:'Пиковая дама', s:'👁️', full:'Что-то скрыто от тебя — и раскроется не тогда, когда ты этого ждёшь. Будь внимателен к знакам.'},
-  {n:'Балда', s:'🔨', full:'Простое решение — лучшее. Не усложняй там, где можно обойтись одним точным шагом.'},
-  {n:'Руслан', s:'⚔️', full:'Иди к цели. Дорога будет долгой, но настойчивость приведёт к тому, что потеряно.'},
-  {n:'Людмила', s:'👑', full:'Тебя найдут. А пока — храни верность тому, что дорого, даже если кажется, что всё потеряно.'},
-  {n:'Золотая рыбка', s:'🐟', full:'Желание исполнится — но осторожно с формулировкой. Ты получишь ровно то, о чём попросишь.'},
-  {n:'Старуха', s:'🧓', full:'Жадность возвращается. Карта напоминает: довольствуйся тем, что имеешь, или потеряешь всё.'},
-  {n:'Царевна-Лебедь', s:'🦢', full:'Скоро всё изменится. То, что казалось недостатком, обернётся силой. Будь готов к перемене.'},
-  {n:'Кот учёный', s:'🐈', full:'Слушай истории до конца. Ответ, который ты ищешь, спрятан в чужом опыте.'},
-  {n:'Гришка Отрепьев', s:'🎭', full:'Обман и тень. Не всё то правда, что говорят громко. Проверяй то, что слышишь.'},
-  {n:'Пугачёв', s:'❄️', full:'Ветер перемен. Судьба может помиловать, а может испытать. Будь смел, но не безрассуден.'}
+  {n:'Онегин', s:'🎩', type:'bad', full:'Скука и пустота. Ты ищешь, но не находишь. Карта советует: отпусти лишнее.'},
+  {n:'Татьяна', s:'💌', type:'good', full:'Искренность. Скажи то, что боишься сказать. Это откроет новые двери.'},
+  {n:'Ленский', s:'🌹', type:'neutral', full:'Юность и горячность. Ты слишком спешишь. Дай времени расставить всё по местам.'},
+  {n:'Германн', s:'🃏', type:'bad', full:'Азарт и риск. Не ставь всё на одну карту, иначе потеряешь больше, чем имеешь.'},
+  {n:'Пиковая дама', s:'👁️', type:'bad', full:'Тайна и рок. Что-то скрыто от тебя. Будь осторожен с обещаниями.'},
+  {n:'Балда', s:'🔨', type:'good', full:'Хитрость и ум. Простое решение — лучшее. Ты справишься с любым соперником.'},
+  {n:'Руслан', s:'⚔️', type:'good', full:'Стремление. Иди к цели. Твоя настойчивость обязательно приведет к победе.'},
+  {n:'Людмила', s:'👑', type:'good', full:'Верность и ожидание. Тебя найдут. Храни веру в лучшее.'},
+  {n:'Золотая рыбка', s:'🐟', type:'neutral', full:'Желание. Осторожно с формулировками. Ты получишь ровно то, о чём попросишь.'},
+  {n:'Старуха', s:'🧓', type:'bad', full:'Жадность и возмездие. Довольствуйся тем, что имеешь, или потеряешь всё.'},
+  {n:'Царевна-Лебедь', s:'🦢', type:'good', full:'Преображение. Скоро всё изменится. То, что казалось недостатком, обернётся силой.'},
+  {n:'Кот учёный', s:'🐈', type:'good', full:'Мудрость. Слушай истории до конца. Ответ спрятан в чужом опыте.'},
+  {n:'Гришка Отрепьев', s:'🎭', type:'bad', full:'Обман и тень. Не всё то правда, что говорят громко. Проверяй факты.'},
+  {n:'Пугачёв', s:'❄️', type:'neutral', full:'Ветер перемен. Судьба может помиловать, а может испытать. Будь смел, но осмотрителен.'}
 ];
 const TAROT_POSITIONS = ['Прошлое', 'Настоящее', 'Будущее', 'Совет', 'Тайное'];
 
@@ -590,7 +610,7 @@ function initBoot(){
     {t:'Загрузка литературных процессов...', c:''},
     {t:'Проверка целостности архивов...', c:''},
     {t:'⚠ Обнаружено 6 повреждённых файлов', c:'warn'},
-    {t:'⚠ Открыты программы: СЦДБ.Карта, Оракул, Бал, Тайнопись', c:'warn'},
+    {t:'⚠ Открыты программы: СЦДБ.Карта, Оракул, Бал, Тайнопись, Настройки', c:'warn'},
     {t:'', c:''},
     {t:'Добро пожаловать, администратор.', c:'ok'},
     {t:'Нажми в любом месте, чтобы войти...', c:''}
@@ -646,7 +666,7 @@ function initStartMenu(){
   const reset = document.createElement('div');
   reset.className = 'mi';
   reset.innerHTML = `<span>🔄</span><span>Сбросить прогресс</span>`;
-  reset.style.borderTop = '1px solid #c9bfa4';
+  reset.style.borderTop = '1px solid #8b7d5b';
   reset.style.marginTop = '6px';
   reset.addEventListener('click', () => {
     if(confirm('Точно сбросить весь прогресс?')){
@@ -680,15 +700,20 @@ function unlock(k){
   gotAchv.add(k); renderAchv(); saveState();
   const a = ACHV[k];
   toast(`🏆 ${a.title}`, a.hint);
+  // Обновляем окно настроек, если оно открыто, чтобы разблокировать новые обои
+  if(document.querySelector('.window[data-id="settings"]')){
+    document.querySelector('.window[data-id="settings"] .close').click();
+    openWindow('settings');
+  }
 }
 
 function toast(title, sub){
   const el = document.createElement('div');
-  el.style.cssText = `position:fixed;bottom:60px;right:16px;left:16px;background:#12241d;color:#d4af37;
-    border:2px solid #d4af37;border-radius:8px;padding:12px 16px;font-size:12px;
-    z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,.6);animation:pop .3s ease;
+  el.style.cssText = `position:fixed;bottom:60px;right:16px;left:16px;background:#1a3324;color:#d1a352;
+    border:2px solid; border-color:#2c4a35 #000 #000 #2c4a35; padding:12px 16px;font-size:13px;
+    z-index:99999;box-shadow:4px 4px 0 rgba(0,0,0,0.8);
     font-family:'Courier New',monospace;max-width:400px;margin:0 auto;`;
-  el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">${title}</div><div style="opacity:.85;font-size:11px;">${sub}</div>`;
+  el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">${title}</div><div style="opacity:.85;font-size:12px;">${sub}</div>`;
   document.body.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = 0;
     setTimeout(() => el.remove(), 400); }, 3200);
@@ -895,16 +920,76 @@ function renderApp(win, app){
   if (app.id === 'tarot')  renderTarot(win);
   if (app.id === 'ball')   renderBall(win);
   if (app.id === 'cipher') renderCipher(win);
+  if (app.id === 'settings') renderSettings(win);
   if (app.id === 'secret') renderSecret(win);
 }
+
+/* --- НАСТРОЙКИ --- */
+function renderSettings(win){
+  win.innerHTML = `
+    <div class="titlebar"><span>⚙️ Настройки.exe — Персонализация</span><button class="close">×</button></div>
+    <div class="window-body">
+      <p>Выбери фон для рабочего стола. Обои открываются за достижения.</p>
+      <p style="font-size:12px;color:#4a3b16;">Твои достижения: <b>${gotAchv.size}</b></p>
+      
+      <div class="settings-grid">
+        ${WALLPAPERS.map(wp => {
+          const isUnlocked = gotAchv.size >= wp.req;
+          const isActive = CURRENT_WALLPAPER === wp.id;
+          return `
+            <div class="wp-card ${isUnlocked ? '' : 'locked'}">
+              <div class="wp-preview">
+                ${wp.url ? `<img src="${wp.url}" alt="${wp.name}">` : '<div style="color:#d1a352;font-size:12px;">По умолчанию</div>'}
+                ${!isUnlocked ? `<div class="wp-lock"><div class="ic">🔒</div>Нужно ${wp.req} ачивки</div>` : ''}
+              </div>
+              <div style="font-size:12px;font-weight:bold;text-align:center;margin-bottom:4px;">${wp.name}</div>
+              ${isUnlocked ? `
+                <div class="wp-actions" style="flex-wrap: wrap;">
+                  <button class="btn small" style="flex: 1 1 100%; margin-bottom:4px;" onclick="setWallpaper('${wp.id}')" ${isActive?'disabled':''}>${isActive?'Выбрано':'Применить'}</button>
+                  ${wp.url ? `
+                    <button class="btn small" style="flex: 1;" onclick="downloadWallpaper('${wp.id}', 'pc')">Скачать ПК</button>
+                    <button class="btn small" style="flex: 1;" onclick="downloadWallpaper('${wp.id}', 'mobile')">Скачать Моб.</button>
+                  ` : ''}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+window.setWallpaper = function(id){
+  CURRENT_WALLPAPER = id;
+  localStorage.setItem('pushkin_wallpaper', id);
+  applyWallpaper();
+  toast('🖼 Обои изменены', 'Фон рабочего стола обновлен.');
+  document.querySelector('.window[data-id="settings"] .close').click();
+  setTimeout(() => openWindow('settings'), 100);
+};
+
+window.downloadWallpaper = function(id, type){
+  const wp = WALLPAPERS.find(w => w.id === id);
+  if (!wp) return;
+  const fileUrl = type === 'mobile' ? wp.mobileUrl : wp.url;
+  if (!fileUrl) return;
+  
+  const link = document.createElement('a');
+  link.href = fileUrl;
+  link.download = `pushkin_os_${wp.id}_${type}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast('⬇️ Загрузка', `Картинка (${type === 'mobile' ? 'телефон' : 'ПК'}) сохраняется.`);
+};
 
 /* --- СЦДБ.Карта --- */
 function renderSCDB(win){
   win.innerHTML = `
     <div class="titlebar"><span>🗂️ СЦДБ.Карта</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: коллаж — 5 зданий библиотек, соединённых светящимися линиями</div>
-      <p style="font-size:12px;color:#6b6144;">
+      <div class="portrait"><img src="img/4.jpg" alt="СЦДБ"></div>
+      <p style="font-size:12px;color:#4a3b16;">
         Сеть СЦДБ — 5 узлов. Пройди все, и билет заполнится штампами.
       </p>
       <div class="scdb-grid" id="scdbGrid">
@@ -1017,13 +1102,13 @@ function renderTarot(win){
   win.innerHTML = `
     <div class="titlebar"><span>🎴 Оракул.exe</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: рука гадалки над картами, свечи, зеркало, перо</div>
-      <p style="text-align:center;font-style:italic;color:#6b6144;">
+      <div class="portrait"><img src="img/1.jpg" alt="Гадалка"></div>
+      <p style="text-align:center;font-style:italic;color:#4a3b16;">
         Задай вопрос и вытяни три карты.<br>
         Расклад: <b>${positions.join(' • ')}</b>
       </p>
       <div class="input-row">
-        <input type="text" id="tarotQ" placeholder="Твой вопрос...">
+        <input type="text" id="tarotQ" placeholder="Твой вопрос к Оракулу...">
       </div>
       <div class="tarot-spread" id="spread">
         ${spread.map((c,i) => `
@@ -1058,16 +1143,32 @@ function showTarotReading(win, spread, question){
   const r = win.querySelector('#reading');
   let html = '';
   if(question.trim()){
-    html += `<div style="margin-bottom:10px;font-weight:bold;color:#12241d;">Твой вопрос: «${question.trim()}»</div>`;
+    html += `<div style="margin-bottom:10px;font-weight:bold;color:#1a3324;padding-bottom:8px;border-bottom:1px solid #8b7d5b;">Твой вопрос: «${question.trim()}»</div>`;
   }
-  html += '<b style="color:#12241d;font-size:13px;">📖 Толкование</b>';
+  html += '<b style="color:#1a3324;font-size:14px;font-family:Courier New;">📖 Толкование</b>';
   
-  spread.forEach((c, i) => {
+  let badCount = 0; let goodCount = 0;
+  spread.forEach(c => {
+    if (c.type === 'bad') badCount++;
+    if (c.type === 'good') goodCount++;
     html += `<h4>${c.pos} — ${c.s} ${c.n}</h4>
-      <div style="font-size:11px;color:#4a4a4a;margin-bottom:10px;">${c.full}</div>`;
+      <div style="font-size:13px;color:#4a4a4a;margin-bottom:10px;">${c.full}</div>`;
   });
 
-  html += `<div class="total">Судьба складывает эти карты вместе: ${spread[0].n} напоминает о том, что было; ${spread[1].n} говорит о том, что есть; ${spread[2].n} показывает, куда всё идёт.</div>`;
+  let synthesis = '';
+  if (badCount >= 2) {
+    synthesis = `⚠️ <b>Судьба предупреждает:</b> в твоём раскладе слишком много тревожных знаков. Сейчас не время для резких решений. Возьми паузу и прислушайся к себе.`;
+  } else if (goodCount >= 2) {
+    synthesis = `✨ <b>Судьба благоволит:</b> карты говорят, что ты на верном пути. Смело иди вперёд, твои усилия скоро принесут плоды.`;
+  } else {
+    synthesis = `⚖️ <b>Равновесие:</b> сейчас в твоей жизни полоса перемен. Нет явных побед или поражений, всё зависит от твоего выбора. Действуй обдуманно.`;
+  }
+
+  if (question.trim()) {
+    synthesis += `<br><br>💡 <b>К твоему вопросу:</b> карта «${spread[1].n}» в настоящем подсказывает, что тебе стоит обратить внимание именно на это.`;
+  }
+
+  html += `<div class="total">${synthesis}</div>`;
   r.innerHTML = html;
   r.classList.add('show');
 
@@ -1088,8 +1189,8 @@ function renderBall(win){
   win.innerHTML = `
     <div class="titlebar"><span>💃 Бал.exe</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: бальный зал, люстры, пары, свечи, оркестр</div>
-      <p style="font-size:12px;color:#6b6144;font-style:italic;text-align:center;">
+      <div class="portrait"><img src="img/2.jpg" alt="Бал"></div>
+      <p style="font-size:13px;color:#4a3b16;font-style:italic;text-align:center;">
         «Вот бал: весь в огнях...». Повтори движение.
       </p>
       <div class="ball-stage">
@@ -1151,8 +1252,7 @@ function renderBall(win){
   function finishLose(){
     const box = document.createElement('div');
     box.className = 'success-box';
-    box.style.background = 'linear-gradient(135deg,#fde0e0,#fecaca)';
-    box.style.borderColor = '#c0392b'; box.style.color = '#7f1d1d';
+    box.style.background = '#e6c1c1'; box.style.borderColor = '#7a2323'; box.style.color = '#4a0e0e';
     box.innerHTML = `<b>✗ СБИЛСЯ С РИТМА</b>Попробуй ещё раз!`;
     win.querySelector('.window-body').appendChild(box);
     buttons.forEach(b => b.disabled = true);
@@ -1218,7 +1318,7 @@ function renderCipher(win){
   win.innerHTML = `
     <div class="titlebar"><span>🔐 Тайнопись.exe</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: шифровальная машина, лампа, бумаги</div>
+      <div class="portrait"><img src="img/3.jpg" alt="Шифр"></div>
       
       <div class="cipher-info">
         <b>📜 ${typeName}</b><br>
@@ -1251,21 +1351,21 @@ function renderCipher(win){
   btn.addEventListener('click', () => {
     if (clean(input.value) === correctClean) {
       btn.disabled = true; input.disabled = true;
-      btn.style.background = '#2d5a45'; btn.style.color = '#d4af37'; btn.textContent = 'Верно!';
+      btn.style.background = '#2c4a35'; btn.style.color = '#86a38e'; btn.textContent = 'Верно!';
       
       res.innerHTML = `
         <div class="cipher-result">
           <b>✓ РАСШИФРОВАНО</b>
           «${phrase}»<br><br>
-          <span style="font-size:11px;">Пусть эта строка станет твоим предсказанием на сегодня.</span>
+          <span style="font-size:12px;">Пусть эта строка станет твоим предсказанием на сегодня.</span>
         </div>
       `;
       res.style.display = 'block';
       
       if (!doneApps.has('cipher')) { doneApps.add('cipher'); saveState(); unlock('hacker'); updateProgress(); }
     } else {
-      input.style.borderColor = '#ef4444';
-      setTimeout(() => input.style.borderColor = '#d4af37', 500);
+      input.style.borderColor = '#7a2323';
+      setTimeout(() => input.style.borderColor = '#2c4a35 #fff #fff #2c4a35', 500);
       toast('✗ Неверно', 'Попробуй ещё раз.');
     }
   });
@@ -1303,13 +1403,13 @@ function renderSecret(win){
   win.innerHTML = `
     <div class="titlebar"><span>📜 А.С.Пушкин.архив</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: Пушкин — перо, свеча, рукопись</div>
+      <div class="portrait"><img src="img/11.jpg" alt="Пушкин"></div>
       <p><b>Все процессы работают штатно.</b></p>
       <p>Герои вернулись на страницы. Строфы — на места. Сеть СЦДБ активна.</p>
-      <p style="margin-top:14px; font-style:italic; color:#2d5a45;">
+      <p style="margin-top:16px; font-style:italic; color:#2c4a35;">
         «Что дружба? Лёгкий пыл похмелья...» — прошептал кто-то и растворился.
       </p>
-      <p style="margin-top:18px;"><b>Спасибо, администратор.</b></p>
+      <p style="margin-top:20px;"><b>Спасибо, администратор.</b></p>
     </div>`;
   if (!gotAchv.has('legend')) setTimeout(() => unlock('legend'), 400);
 }
@@ -1325,6 +1425,7 @@ initIcons();
 initStartMenu();
 renderAchv();
 updateProgress();
+applyWallpaper();
 
 setInterval(() => {
   const d = new Date(); const p = n => String(n).padStart(2,'0');
