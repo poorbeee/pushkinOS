@@ -2,20 +2,22 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>ПУШКИН.ОС v4.0 — СЦДБ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; overflow: hidden; }
+  html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
   body { font-family: 'Courier New', monospace; background: #000; }
 
+  /* ЗАСТАВКА */
   #boot { position: fixed; inset: 0; background: #000; color: #4ade80;
-    padding: 40px; font-size: 15px; line-height: 2; z-index: 10000; cursor: pointer; }
+    padding: 20px; font-size: 14px; line-height: 2; z-index: 10000; cursor: pointer; overflow-y: auto; }
   #boot .line { opacity: 0; animation: fadeIn .25s forwards; }
   #boot .warn { color: #fbbf24; } #boot .ok { color: #4ade80; }
   @keyframes fadeIn { to { opacity: 1 } }
   #boot.hide { opacity: 0; pointer-events: none; transition: opacity .6s; }
 
+  /* РАБОЧИЙ СТОЛ */
   #desktop { position: fixed; inset: 0;
     background: radial-gradient(circle at 50% 40%, #1b2a4a 0%, #070b14 100%); overflow: hidden; }
   #desktop::before { content: ''; position: absolute; inset: 0;
@@ -23,8 +25,9 @@
       linear-gradient(90deg, rgba(212,175,55,.04) 1px, transparent 1px);
     background-size: 40px 40px; pointer-events: none; }
 
+  /* ИКОНКИ */
   #icons { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column;
-    gap: 6px; width: 118px; z-index: 2; }
+    gap: 6px; width: 118px; z-index: 2; bottom: 60px; overflow-y: auto; padding-bottom: 10px; }
   .icon { position: relative; display: flex; flex-direction: column; align-items: center;
     padding: 8px 4px; border-radius: 6px; cursor: pointer; color: #e8e4d8; text-align: center;
     border: 1px solid transparent; transition: .12s; user-select: none; }
@@ -38,33 +41,35 @@
   .icon.secret { display: none; }
   .icon.secret.unlocked { display: flex; animation: pop .5s ease; }
 
+  /* ОКНА */
   #windows { position: absolute; inset: 0; pointer-events: none; }
   .window { position: absolute; width: 520px; pointer-events: auto; background: #f4ecd8;
     border: 2px solid #12241d; border-radius: 8px;
     box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(212,175,55,.25);
-    overflow: hidden; animation: pop .16s ease; }
+    overflow: hidden; animation: pop .16s ease; display: flex; flex-direction: column; }
   @keyframes pop { from { transform: scale(.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
   .titlebar { background: linear-gradient(90deg, #12241d, #2d5a45); color: #d4af37;
     padding: 9px 12px; display: flex; justify-content: space-between; align-items: center;
-    cursor: move; font-size: 13px; user-select: none; border-bottom: 1px solid rgba(212,175,55,.3); }
-  .close { background: #7f1d1d; color: #fecaca; border: 1px solid #ef4444; width: 22px;
-    height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
-    line-height: 1; display: flex; align-items: center; justify-content: center; }
+    cursor: move; font-size: 13px; user-select: none; border-bottom: 1px solid rgba(212,175,55,.3);
+    flex-shrink: 0; }
+  .close { background: #7f1d1d; color: #fecaca; border: 1px solid #ef4444; width: 24px;
+    height: 24px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
+    line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .close:hover { background: #ef4444; color: #fff; }
   .window-body { padding: 16px; color: #262626; font-size: 13px; line-height: 1.55;
-    max-height: 72vh; overflow-y: auto; }
+    overflow-y: auto; flex-grow: 1; }
   .window-body p { margin-bottom: 10px; }
   .portrait { width: 100%; height: 170px; margin-bottom: 14px; border-radius: 6px;
     background: repeating-linear-gradient(45deg, #e3d9c0, #e3d9c0 12px, #d8cdb0 12px, #d8cdb0 24px);
     border: 2px dashed #a89877; display: flex; align-items: center; justify-content: center;
-    color: #6b6144; font-size: 11px; text-align: center; padding: 14px; line-height: 1.4; }
+    color: #6b6144; font-size: 11px; text-align: center; padding: 14px; line-height: 1.4; flex-shrink: 0; }
   .portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
   .status { background: #0d0d0d; color: #f87171; padding: 7px 10px; font-size: 11px;
     border-radius: 4px; margin-bottom: 12px; border-left: 3px solid #ef4444; }
   .status.ok { color: #4ade80; border-left-color: #4ade80; }
   .question { font-weight: bold; margin: 12px 0 10px; color: #12241d; font-size: 13px; }
   .option { display: block; width: 100%; text-align: left; background: #fffdf5;
-    border: 1px solid #c9bfa4; color: #262626; padding: 9px 12px; margin-bottom: 7px;
+    border: 1px solid #c9bfa4; color: #262626; padding: 10px 12px; margin-bottom: 7px;
     border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 12px;
     transition: .12s; line-height: 1.4; }
   .option:hover:not(:disabled) { background: #fff8e0; border-color: #d4af37; transform: translateX(2px); }
@@ -77,39 +82,40 @@
     color: #14532d; font-size: 12px; animation: pop .3s ease; }
   .success-box b { display: block; margin-bottom: 6px; font-size: 13px; }
   .input-row { display: flex; gap: 8px; margin: 10px 0; }
-  .input-row input { flex: 1; padding: 9px 12px; border: 2px solid #c9bfa4;
+  .input-row input { flex: 1; padding: 10px 12px; border: 2px solid #c9bfa4;
     border-radius: 5px; font-family: inherit; font-size: 13px; background: #fffdf5; color: #12241d; }
   .input-row input:focus { outline: none; border-color: #d4af37; }
-  .btn { padding: 9px 16px; background: #d4af37; color: #12241d; border: none;
-    border-radius: 5px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 12px; }
+  .btn { padding: 10px 16px; background: #d4af37; color: #12241d; border: none;
+    border-radius: 5px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 12px; flex-shrink: 0; }
   .btn:hover { background: #e8c860; }
   .btn:disabled { opacity: .5; cursor: default; }
 
-  #taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 42px;
+  #taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 46px;
     background: linear-gradient(180deg, #2d5a45, #12241d); border-top: 2px solid #d4af37;
     display: flex; align-items: center; padding: 0 12px; gap: 14px; color: #d4af37;
     font-size: 12px; z-index: 9998; box-shadow: 0 -4px 20px rgba(0,0,0,.5); }
-  #start { padding: 7px 14px; background: #d4af37; color: #12241d; font-weight: bold;
+  #start { padding: 7px 12px; background: #d4af37; color: #12241d; font-weight: bold;
     border-radius: 5px; cursor: pointer; font-size: 12px; letter-spacing: .5px;
-    border: none; font-family: inherit; }
+    border: none; font-family: inherit; white-space: nowrap; }
   #start:hover { background: #e8c860; }
-  #progress { flex: 1; text-align: center; letter-spacing: 1px; font-size: 11px; }
-  #achv { display: flex; gap: 4px; font-size: 16px; }
+  #progress { flex: 1; text-align: center; letter-spacing: 1px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #achv { display: flex; gap: 4px; font-size: 16px; display: none; }
   #achv .a { opacity: .2; filter: grayscale(1); transition: .4s; cursor: help; }
   #achv .a.on { opacity: 1; filter: none; transform: scale(1.15); }
-  #clock { font-variant-numeric: tabular-nums; opacity: .8; }
-  #startmenu { position: absolute; bottom: 48px; left: 12px; background: #f4ecd8;
+  #clock { font-variant-numeric: tabular-nums; opacity: .8; display: none; }
+  
+  #startmenu { position: absolute; bottom: 52px; left: 12px; background: #f4ecd8;
     border: 2px solid #12241d; border-radius: 8px; padding: 6px; display: none;
-    min-width: 230px; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+    min-width: 230px; max-width: 90vw; z-index: 9999; box-shadow: 0 10px 40px rgba(0,0,0,.6); max-height: 70vh; overflow-y: auto; }
   #startmenu.open { display: block; animation: pop .15s ease; }
-  #startmenu .mi { padding: 9px 12px; cursor: pointer; font-size: 12px; border-radius: 5px;
+  #startmenu .mi { padding: 10px 12px; cursor: pointer; font-size: 12px; border-radius: 5px;
     color: #262626; display: flex; gap: 8px; align-items: center; }
   #startmenu .mi:hover { background: #d4af37; color: #12241d; }
   .final .titlebar { background: linear-gradient(90deg, #7a5c00, #d4af37); color: #12241d; }
 
   /* ТАРО */
   .tarot-spread { display: flex; gap: 8px; justify-content: center; margin: 14px 0; flex-wrap: wrap; }
-  .tcard { width: 140px; height: 220px; perspective: 900px; cursor: pointer; position: relative; }
+  .tcard { width: 130px; height: 200px; perspective: 900px; cursor: pointer; position: relative; }
   .tcard-inner { position: absolute; inset: 0; transition: transform .7s;
     transform-style: preserve-3d; }
   .tcard.flipped .tcard-inner { transform: rotateY(180deg); }
@@ -135,31 +141,31 @@
 
   /* БАЛ */
   .ball-stage { background: linear-gradient(180deg, #2a1810, #0d0808);
-    border-radius: 8px; padding: 18px; text-align: center; margin-bottom: 12px;
+    border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 12px;
     border: 1px solid #d4af37; position: relative; overflow: hidden; }
   .ball-stage::before { content: ''; position: absolute; inset: 0;
     background: radial-gradient(circle at 50% 0%, rgba(212,175,55,.15) 0%, transparent 60%); }
   .ball-stage > * { position: relative; }
-  .ball-round { color: #d4af37; font-size: 12px; letter-spacing: 2px; margin-bottom: 10px; }
-  .ball-status { color: #e8e4d8; font-size: 12px; min-height: 22px; margin-bottom: 12px;
+  .ball-round { color: #d4af37; font-size: 12px; letter-spacing: 2px; margin-bottom: 8px; }
+  .ball-status { color: #e8e4d8; font-size: 12px; min-height: 22px; margin-bottom: 10px;
     font-style: italic; }
-  .ball-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .ball-move { padding: 16px 8px; border-radius: 8px; border: 2px solid #12241d;
+  .ball-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ball-move { padding: 12px 6px; border-radius: 8px; border: 2px solid #12241d;
     background: #fffdf5; color: #12241d; cursor: pointer; font-family: inherit;
-    font-size: 13px; font-weight: bold; transition: .12s; display: flex;
-    align-items: center; justify-content: center; gap: 8px; }
+    font-size: 12px; font-weight: bold; transition: .12s; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
   .ball-move:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(212,175,55,.3); }
   .ball-move:disabled { opacity: .5; cursor: default; }
   .ball-move.lit { background: #d4af37; color: #12241d; transform: scale(1.05);
-    box-shadow: 0 0 24px #d4af37; }
-  .ball-move .ic { font-size: 22px; }
+    box-shadow: 0 0 20px #d4af37; }
+  .ball-move .ic { font-size: 24px; }
 
   /* ШИФР */
   .cipher-info { background: #f0e6cc; border-left: 3px solid #7a5c00; padding: 10px 12px;
     border-radius: 4px; font-size: 11px; margin-bottom: 12px; color: #4a3a10; line-height: 1.5; }
   .cipher-info b { color: #12241d; }
-  .cipher-box { background: #0d0d0d; color: #4ade80; padding: 16px; border-radius: 6px;
-    font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 3px;
+  .cipher-box { background: #0d0d0d; color: #4ade80; padding: 14px; border-radius: 6px;
+    font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px;
     text-align: center; margin: 12px 0; border: 1px solid #2d5a45; word-break: break-all;
     line-height: 1.6; }
   .cipher-help { background: #fffdf5; border: 1px dashed #c9bfa4; padding: 10px;
@@ -172,9 +178,9 @@
   .cipher-result b { font-style: normal; color: #12241d; display: block; margin-bottom: 6px; }
 
   /* СООТНЕСИ */
-  .match-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .match-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 0; }
   .match-col { display: flex; flex-direction: column; gap: 6px; }
-  .match-item { padding: 9px 10px; background: #fffdf5; border: 2px solid #c9bfa4;
+  .match-item { padding: 8px 10px; background: #fffdf5; border: 2px solid #c9bfa4;
     border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 11px;
     text-align: left; transition: .12s; color: #262626; line-height: 1.35; }
   .match-item:hover:not(.matched) { border-color: #d4af37; background: #fff8e0; }
@@ -187,39 +193,75 @@
   /* СЦДБ */
   .scdb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
   .scdb-node { background: #fffdf5; border: 2px solid #c9bfa4; border-radius: 8px;
-    padding: 12px 8px; cursor: pointer; font-family: inherit; text-align: center;
+    padding: 10px 6px; cursor: pointer; font-family: inherit; text-align: center;
     transition: .15s; color: #262626; }
   .scdb-node:hover { transform: translateY(-2px); border-color: #d4af37;
     box-shadow: 0 6px 18px rgba(0,0,0,.15); }
   .scdb-node.done { background: linear-gradient(135deg, #d4f5d4, #b8e6b8);
     border-color: #2d5a45; }
-  .scdb-emoji { font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .scdb-emoji { font-size: 24px; line-height: 1; margin-bottom: 4px; }
   .scdb-num { font-size: 10px; color: #6b6144; letter-spacing: 1px; }
   .scdb-name { font-size: 11px; font-weight: bold; margin: 2px 0; }
   .scdb-addr { font-size: 9px; color: #8a8065; }
   .scdb-off { font-size: 10px; color: #a89877; margin-top: 4px; }
   .scdb-check { font-size: 10px; color: #14532d; font-weight: bold; margin-top: 4px; }
   .ticket { margin-top: 14px; background: #fff8e0; border: 2px dashed #d4af37;
-    border-radius: 8px; padding: 12px; }
-  .ticket-head { font-weight: bold; color: #12241d; margin-bottom: 10px;
+    border-radius: 8px; padding: 10px; }
+  .ticket-head { font-weight: bold; color: #12241d; margin-bottom: 8px;
     font-size: 12px; text-align: center; letter-spacing: 1px; }
-  .ticket-stamps { display: flex; justify-content: space-around; gap: 6px; }
-  .stamp { width: 48px; height: 48px; border-radius: 50%; border: 2px dashed #c9bfa4;
+  .ticket-stamps { display: flex; justify-content: space-around; gap: 4px; flex-wrap: wrap; }
+  .stamp { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed #c9bfa4;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 16px; color: #a89877; opacity: .4; transition: .3s;
+    font-size: 14px; color: #a89877; opacity: .4; transition: .3s;
     background: #fffdf5; }
   .stamp span { font-size: 8px; }
   .stamp.on { opacity: 1; border-style: solid; border-color: #2d5a45;
     color: #14532d; background: #d4f5d4; transform: rotate(-4deg); }
-  .ticket-foot { text-align: center; margin-top: 10px; font-size: 11px; color: #6b6144; }
+  .ticket-foot { text-align: center; margin-top: 8px; font-size: 11px; color: #6b6144; }
 
   /* ПРОФИЛЬ */
-  .profile-card { padding: 16px; background: #fffdf5; border: 2px solid #c9bfa4;
+  .profile-card { padding: 14px; background: #fffdf5; border: 2px solid #c9bfa4;
     border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: .15s; }
   .profile-card:hover { border-color: #d4af37; transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(0,0,0,.15); }
   .profile-card h3 { font-size: 14px; color: #12241d; margin-bottom: 6px; }
   .profile-card p { font-size: 11px; color: #6b6144; line-height: 1.5; }
+
+  /* МОБИЛЬНАЯ ВЕРСИЯ */
+  @media (max-width: 768px) {
+    #icons { position: absolute; top: 10px; left: 10px; right: 10px; bottom: auto;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: auto;
+      overflow-y: visible; padding-bottom: 0; z-index: 10; }
+    .icon { padding: 10px 4px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.05); }
+    .icon .glyph { font-size: 28px; }
+    .icon .label { font-size: 10px; }
+    .icon.fixed::after { top: 2px; right: 2px; }
+
+    .window { position: absolute; left: 50% !important; top: 50% !important;
+      transform: translate(-50%, -50%) !important; width: calc(100% - 20px) !important;
+      max-height: calc(100% - 100px) !important; margin: 0; }
+    .titlebar { cursor: default; padding: 10px 12px; font-size: 14px; }
+    .close { width: 28px; height: 28px; }
+    .window-body { padding: 14px; font-size: 14px; }
+    .portrait { height: 140px; }
+
+    #taskbar { height: 52px; gap: 8px; padding: 0 8px; }
+    #start { padding: 8px 10px; font-size: 11px; }
+    #progress { font-size: 10px; }
+    .option { padding: 12px; font-size: 13px; }
+    .input-row { flex-direction: column; }
+    .btn { width: 100%; padding: 12px; font-size: 14px; }
+    .input-row input { padding: 12px; font-size: 14px; }
+
+    .tarot-spread { gap: 6px; }
+    .tcard { width: 30%; height: 160px; }
+    .tcard-back .mn { font-size: 8px; }
+    .match-wrap { grid-template-columns: 1fr; gap: 10px; }
+    .match-item { font-size: 12px; padding: 10px; }
+    .scdb-grid { grid-template-columns: 1fr; }
+    .ball-move { padding: 14px 8px; }
+    .cipher-box { font-size: 13px; letter-spacing: 1px; padding: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -261,21 +303,21 @@ function chooseProfile(){
   const win = document.createElement('div');
   win.className = 'window';
   win.dataset.id = 'profile';
+  win.style.width = '90%'; win.style.maxWidth = '500px';
   win.style.left = '50%'; win.style.top = '45%';
   win.style.transform = 'translate(-50%,-50%)';
-  win.style.width = '520px';
   win.style.zIndex = ++zIndex;
   win.innerHTML = `
-    <div class="titlebar"><span>👤 Выбор профиля администратора</span></div>
+    <div class="titlebar"><span>👤 Выбор профиля</span></div>
     <div class="window-body">
-      <p style="margin-bottom:14px;">Прежде чем войти в систему, выбери свой путь. Это влияет на подсказки и строгость проверки.</p>
+      <p style="margin-bottom:14px;">Прежде чем войти, выбери свой путь.</p>
       <div class="profile-card" data-profile="intern">
         <h3>🎓 Стажёр</h3>
-        <p>Подсказки включены. Ошибки не сбрасывают прогресс. Идеально для первого знакомства с системой.</p>
+        <p>Подсказки включены. Ошибки не сбрасывают прогресс. Идеально для знакомства.</p>
       </div>
       <div class="profile-card" data-profile="keeper">
         <h3>🗝️ Хранитель</h3>
-        <p>Без подсказок. Ошибки в «порядке» сбрасывают шаг. Для тех, кто любит вызов.</p>
+        <p>Без подсказок. Ошибки в «порядке» сбрасывают шаг. Для любителей вызова.</p>
       </div>
     </div>`;
   document.getElementById('windows').appendChild(win);
@@ -285,7 +327,7 @@ function chooseProfile(){
       localStorage.setItem('pushkin_profile', PROFILE);
       win.remove();
       toast('👤 Профиль выбран', PROFILE === 'intern' ? 'Стажёр' : 'Хранитель');
-      initIcons(); // перерисовываем readme
+      initIcons();
     });
   });
 }
@@ -366,7 +408,7 @@ const FILES = [
   { id:'drama', name:'тень_на_троне.exe', icon:'👑',
     status:'ПОВРЕЖДЕНИЕ: голоса героев перепутаны',
     portrait:'ЗДЕСЬ: трон, свечи, тень, монах с летописью',
-    intro:'Три голоса звучат в темноте. Узнай, кому принадлежит каждый.',
+    intro:'В темноте звучат голоса. Каждому из них принадлежит своя строка. Соотнеси реплики и персонажей.',
     task:{ type:'match', question:'Соотнеси цитату и героя «Бориса Годунова»',
       pairs:[
         {left:'«Достиг я высшей власти...»', right:'Борис Годунов'},
@@ -406,7 +448,7 @@ const APPS = [
 ];
 
 /* =========================================================
-   ФИЛИАЛЫ СЦДБ
+   ФИЛИАЛЫ СЦДБ (ФИШКИ)
    ========================================================= */
 const BRANCHES = [
   {
@@ -414,8 +456,7 @@ const BRANCHES = [
     addr:'ул. Большая Морская, 33', emoji:'🏛️',
     intro:'Главное здание сети. Крупнейший фонд, редкие издания. Чтобы подключиться, «оживи архив»: соотнеси произведения Пушкина с их жанрами.',
     task:{
-      type:'match',
-      question:'Соотнеси произведение — жанр',
+      type:'match', question:'Соотнеси произведение — жанр',
       pairs:[
         {left:'«Евгений Онегин»', right:'роман в стихах'},
         {left:'«Борис Годунов»', right:'трагедия'},
@@ -429,70 +470,60 @@ const BRANCHES = [
   {
     id:'b2', num:'Фил. №1', name:'Библиотека «Семья и книга»',
     addr:'ул. Маяковского, 27', emoji:'📖',
-    intro:'Филиал семейного чтения. Здесь книги помогают говорить о чувствах. Соотнеси строку Пушкина с тем чувством, которое она передаёт.',
+    intro:'Филиал семейного чтения. Главная фишка — огромный фонд комиксов и графических романов, а также коллекция фантастики Тагильцева. Здесь через комиксы читатели приходят к большой фантастике. Соотнеси современный комикс и классический сюжет, на который он опирается.',
     task:{
-      type:'match',
-      question:'Подбери чувство к пушкинской строке',
+      type:'match', question:'Соотнеси комикс/графический роман и классическую фантастику',
       pairs:[
-        {left:'«Я вас любил: любовь ещё, быть может...»', right:'тихая нежность'},
-        {left:'«Мороз и солнце; день чудесный!»', right:'радость утра'},
-        {left:'«Мчатся тучи, вьются тучи...»', right:'тревога'},
-        {left:'«Что в имени тебе моём?..»', right:'задумчивая грусть'},
-        {left:'«Унылая пора! Очей очарованье!»', right:'светлая печаль'}
+        {left:'«Хранители» (Watchmen)', right:'Деконструкция супергероики (как у Стругацких)'},
+        {left:'«Сага» (Saga)', right:'Космоопера о беглецах (как у Саймака)'},
+        {left:'«Песочный человек» (Sandman)', right:'Мифы и сны (как у Геймана)'},
+        {left:'«Болотная тварь» (Swamp Thing)', right:'Экология и мутация (как у Уэллса)'},
+        {left:'«Акира» (Akira)', right:'Киберпанк и эксперименты (как у Дика)'}
       ]
     },
-    success:'Семейный фонд в порядке. Чувства нашли свои строки.'
+    success:'Семейный фонд в порядке. Комиксы нашли свой путь к фантастике.'
   },
   {
     id:'b3', num:'Фил. №2', name:'Детская библиотека истории и культуры Петербурга',
     addr:'ул. Марата, 72', emoji:'🏰',
-    intro:'Филиал-краевед. Собери путеводитель: соотнеси символ города с его создателем или эпохой.',
+    intro:'Филиал находится в знаменитом Доме Бажанова — памятнике северного модерна. Здесь проходят краеведческие лекции. Пройдись по залам особняка: найди, что в нём есть на самом деле, а что — выдумка.',
     task:{
-      type:'match',
-      question:'Соотнеси петербургский символ — его создателя или эпоху',
-      pairs:[
-        {left:'Медный всадник', right:'Этьен Фальконе, 1782'},
-        {left:'Петропавловский собор', right:'Доменико Трезини, 1733'},
-        {left:'Казанский собор', right:'Андрей Воронихин, 1811'},
-        {left:'Исаакиевский собор', right:'Огюст Монферран, 1858'},
-        {left:'Летний сад', right:'Пётр I, 1704'}
-      ]
+      type:'quiz', question:'Чего НЕТ в особняке Бажанова?',
+      options:[
+        'Майоликовый камин «Вольга и Микула»',
+        'Парадная лестница с витражами',
+        'Зал с фонтаном в виде жар-птицы',
+        'Роспись с северными мотивами'
+      ],
+      correct:2
     },
-    success:'Путеводитель собран. Петербург узнаёт себя.'
+    success:'Особняк изучен. Фонтан оказался мифом, а Дом Бажанова — настоящим.'
   },
   {
     id:'b4', num:'Фил. №3', name:'Детская библиотека иностранной литературы им. М.Д. Яснова',
     addr:'3-я Советская ул., 8', emoji:'🌍',
-    intro:'Филиал на 22 языках. Соотнеси писателя и страну, которую он представляет.',
+    intro:'В фонде этого филиала — книги на 57 языках мира! Здесь работают с переводами и проводят конкурсы юных переводчиков. Проверь свою языковую интуицию.',
     task:{
-      type:'match',
-      question:'Соотнеси писателя — страну',
-      pairs:[
-        {left:'Уильям Шекспир', right:'Англия'},
-        {left:'Иоганн Вольфганг Гёте', right:'Германия'},
-        {left:'Виктор Гюго', right:'Франция'},
-        {left:'Мигель де Сервантес', right:'Испания'},
-        {left:'Ханс Кристиан Андерсен', right:'Дания'}
-      ]
+      type:'quiz', question:'На каком языке роман «Приключения Тома Сойера» Марка Твена звучит как «Tom Sawyerin seikkailut»?',
+      options:['На финском','На шведском','На немецком','На французском'],
+      correct:0
     },
-    success:'Писатели вернулись на свои «полки». Языки соединились.'
+    success:'Языковая интуиция на высоте. 57 языков — это не шутка!'
   },
   {
     id:'b5', num:'Фил. №4', name:'Библиотека на Новгородской',
     addr:'ул. Новгородская, 5', emoji:'⭐',
-    intro:'Филиал ведёт рукописную книгу «Священная память моей семьи». Восстанови хронологию страниц — от начала войны до Победы.',
+    intro:'Самый молодой филиал сети. Здесь каждое мероприятие — будь то лекция, чтение или квест — обязательно заканчивается мастер-классом. Соотнеси событие и то, что на нём мастерят.',
     task:{
-      type:'order',
-      question:'Разложи события истории семьи по хронологии:',
-      lines:[
-        '22 июня 1941 года — начало Великой Отечественной войны',
-        '8 сентября 1941 года — начало блокады Ленинграда',
-        'Январь 1943 года — прорыв блокады (операция «Искра»)',
-        '27 января 1944 года — полное снятие блокады',
-        '9 мая 1945 года — Победа'
+      type:'match', question:'Что делают после мероприятия?',
+      pairs:[
+        {left:'Чтение «Сказки о царе Салтане»', right:'Мастер-класс по лепке из пластилина'},
+        {left:'Лекция о Доме Бажанова', right:'Создание архитектурного коллажа'},
+        {left:'Квест «Тайны Лукоморья»', right:'Рисование песком на световых столах'},
+        {left:'Встреча с комиксистом', right:'Создание своего мини-зина'}
       ]
     },
-    success:'Книга памяти восстановлена. «Никто не забыт, ничто не забыто».'
+    success:'Мероприятия завершены. Мастер-классы прошли на ура!'
   }
 ];
 
@@ -571,7 +602,7 @@ function initBoot(){
     d.className = 'line ' + lines[i].c;
     d.textContent = lines[i].t;
     log.appendChild(d); i++;
-  }, 250);
+  }, 200);
 }
 
 function initIcons(){
@@ -653,10 +684,10 @@ function unlock(k){
 
 function toast(title, sub){
   const el = document.createElement('div');
-  el.style.cssText = `position:fixed;bottom:60px;right:16px;background:#12241d;color:#d4af37;
+  el.style.cssText = `position:fixed;bottom:60px;right:16px;left:16px;background:#12241d;color:#d4af37;
     border:2px solid #d4af37;border-radius:8px;padding:12px 16px;font-size:12px;
     z-index:99999;box-shadow:0 8px 30px rgba(0,0,0,.6);animation:pop .3s ease;
-    font-family:'Courier New',monospace;max-width:280px;`;
+    font-family:'Courier New',monospace;max-width:400px;margin:0 auto;`;
   el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">${title}</div><div style="opacity:.85;font-size:11px;">${sub}</div>`;
   document.body.appendChild(el);
   setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = 0;
@@ -675,21 +706,26 @@ function openWindow(id){
   const existing = document.querySelector(`.window[data-id="${id}"]`);
   if (existing) { focusWin(existing); return; }
 
+  const isMobile = window.innerWidth <= 768;
   const count = document.querySelectorAll('.window').length;
   const win = document.createElement('div');
   win.className = 'window';
   win.dataset.id = id;
-  win.style.left = (80 + (count % 6) * 32) + 'px';
-  win.style.top  = (30  + (count % 6) * 32) + 'px';
+  
+  if (!isMobile) {
+    win.style.left = (80 + (count % 6) * 32) + 'px';
+    win.style.top  = (30  + (count % 6) * 32) + 'px';
+  }
   win.style.zIndex = ++zIndex;
 
   if (file) renderFile(win, file);
   else if (app) renderApp(win, app);
 
   document.getElementById('windows').appendChild(win);
-  makeDraggable(win, win.querySelector('.titlebar'));
+  
+  if (!isMobile) makeDraggable(win, win.querySelector('.titlebar'));
   win.querySelector('.close').addEventListener('click', () => win.remove());
-  win.addEventListener('mousedown', () => focusWin(win));
+  if (!isMobile) win.addEventListener('mousedown', () => focusWin(win));
 }
 
 function makeDraggable(win, handle){
@@ -865,12 +901,11 @@ function renderApp(win, app){
 /* --- СЦДБ.Карта --- */
 function renderSCDB(win){
   win.innerHTML = `
-    <div class="titlebar"><span>🗂️ СЦДБ.Карта — сеть филиалов</span><button class="close">×</button></div>
+    <div class="titlebar"><span>🗂️ СЦДБ.Карта</span><button class="close">×</button></div>
     <div class="window-body">
       <div class="portrait">ЗДЕСЬ: коллаж — 5 зданий библиотек, соединённых светящимися линиями</div>
       <p style="font-size:12px;color:#6b6144;">
-        Сеть СЦДБ — 5 узлов: Центральная и 4 филиала. У каждого — своя задача.
-        Пройди все, и читательский билет заполнится штампами.
+        Сеть СЦДБ — 5 узлов. Пройди все, и билет заполнится штампами.
       </p>
       <div class="scdb-grid" id="scdbGrid">
         ${BRANCHES.map(b => {
@@ -886,7 +921,7 @@ function renderSCDB(win){
         }).join('')}
       </div>
       <div class="ticket" id="ticket">
-        <div class="ticket-head">📚 Читательский билет СЦДБ</div>
+        <div class="ticket-head">📚 Читательский билет</div>
         <div class="ticket-stamps">
           ${BRANCHES.map(b => `
             <div class="stamp ${doneBranches.has(b.id)?'on':''}" title="${b.name}">
@@ -894,7 +929,7 @@ function renderSCDB(win){
             </div>`).join('')}
         </div>
         <div class="ticket-foot" id="ticketFoot">
-          Подключено филиалов: <b>${doneBranches.size} / ${BRANCHES.length}</b>
+          Подключено: <b>${doneBranches.size} / ${BRANCHES.length}</b>
         </div>
       </div>
     </div>`;
@@ -913,14 +948,18 @@ function renderSCDB(win){
 function openBranch(b, parentWin){
   const id = 'branch-' + b.id;
   if (document.querySelector(`.window[data-id="${id}"]`)) return;
+  const isMobile = window.innerWidth <= 768;
   const count = document.querySelectorAll('.window').length;
   const win = document.createElement('div');
   win.className = 'window';
   win.dataset.id = id;
-  win.style.left = (140 + (count%5)*30) + 'px';
-  win.style.top  = (40  + (count%5)*30) + 'px';
+  
+  if (!isMobile) {
+    win.style.left = (140 + (count%5)*30) + 'px';
+    win.style.top  = (40  + (count%5)*30) + 'px';
+    win.style.width = '480px';
+  }
   win.style.zIndex = ++zIndex;
-  win.style.width = '480px';
 
   win.innerHTML = `
     <div class="titlebar"><span>${b.emoji} ${b.name}</span><button class="close">×</button></div>
@@ -931,9 +970,9 @@ function openBranch(b, parentWin){
     </div>`;
 
   document.getElementById('windows').appendChild(win);
-  makeDraggable(win, win.querySelector('.titlebar'));
+  if (!isMobile) makeDraggable(win, win.querySelector('.titlebar'));
   win.querySelector('.close').addEventListener('click', () => win.remove());
-  win.addEventListener('mousedown', () => focusWin(win));
+  if (!isMobile) win.addEventListener('mousedown', () => focusWin(win));
 
   attachTaskHandler(win, b.task, () => branchSolved(b, win, parentWin));
 }
@@ -954,7 +993,7 @@ function branchSolved(b, win, parentWin){
   const stamp = parentWin.querySelectorAll('.stamp')[BRANCHES.findIndex(x=>x.id===b.id)];
   if (stamp) stamp.classList.add('on');
   const foot = parentWin.querySelector('#ticketFoot');
-  if (foot) foot.innerHTML = `Подключено филиалов: <b>${doneBranches.size} / ${BRANCHES.length}</b>`;
+  if (foot) foot.innerHTML = `Подключено: <b>${doneBranches.size} / ${BRANCHES.length}</b>`;
 
   toast(`✓ ${b.num} подключён`, b.name);
 
@@ -966,7 +1005,6 @@ function branchSolved(b, win, parentWin){
 
 /* --- ТАРО --- */
 function renderTarot(win){
-  // случайные 3 позиции из 5
   const positions = [...TAROT_POSITIONS].sort(()=>Math.random()-.5).slice(0,3);
   const spread = [];
   const pool = [...TAROT];
@@ -981,11 +1019,11 @@ function renderTarot(win){
     <div class="window-body">
       <div class="portrait">ЗДЕСЬ: рука гадалки над картами, свечи, зеркало, перо</div>
       <p style="text-align:center;font-style:italic;color:#6b6144;">
-        Задай свой вопрос (необязательно) и вытяни три карты.<br>
+        Задай вопрос и вытяни три карты.<br>
         Расклад: <b>${positions.join(' • ')}</b>
       </p>
       <div class="input-row">
-        <input type="text" id="tarotQ" placeholder="Твой вопрос к Оракулу...">
+        <input type="text" id="tarotQ" placeholder="Твой вопрос...">
       </div>
       <div class="tarot-spread" id="spread">
         ${spread.map((c,i) => `
@@ -1029,8 +1067,7 @@ function showTarotReading(win, spread, question){
       <div style="font-size:11px;color:#4a4a4a;margin-bottom:10px;">${c.full}</div>`;
   });
 
-  // Общее послание
-  html += `<div class="total">Судьба складывает эти карты вместе: ${spread[0].n} напоминает о том, что было; ${spread[1].n} говорит о том, что есть; ${spread[2].n} показывает, куда всё идёт. Слушай свой внутренний голос.</div>`;
+  html += `<div class="total">Судьба складывает эти карты вместе: ${spread[0].n} напоминает о том, что было; ${spread[1].n} говорит о том, что есть; ${spread[2].n} показывает, куда всё идёт.</div>`;
   r.innerHTML = html;
   r.classList.add('show');
 
@@ -1053,12 +1090,11 @@ function renderBall(win){
     <div class="window-body">
       <div class="portrait">ЗДЕСЬ: бальный зал, люстры, пары, свечи, оркестр</div>
       <p style="font-size:12px;color:#6b6144;font-style:italic;text-align:center;">
-        «Вот бал: весь в огнях, в цветах, в вальсах».<br>
-        Повтори движение за хозяином бала.
+        «Вот бал: весь в огнях...». Повтори движение.
       </p>
       <div class="ball-stage">
         <div class="ball-round" id="ballRound">УРОВЕНЬ 1 / ${maxLevel}</div>
-        <div class="ball-status" id="ballStatus">Смотри внимательно...</div>
+        <div class="ball-status" id="ballStatus">Смотри...</div>
         <div class="ball-moves" id="ballMoves">
           ${moves.map(m => `
             <button class="ball-move" data-id="${m.id}" disabled>
@@ -1077,7 +1113,7 @@ function renderBall(win){
   function playSequence(){
     accepting = false;
     buttons.forEach(b => b.disabled = true);
-    statusEl.textContent = 'Смотри внимательно...';
+    statusEl.textContent = 'Смотри...';
     let i = 0;
     const tick = setInterval(() => {
       if (i > 0) buttons.forEach(b => b.classList.remove('lit'));
@@ -1105,7 +1141,7 @@ function renderBall(win){
   function finishWin(){
     const box = document.createElement('div');
     box.className = 'success-box';
-    box.innerHTML = `<b>✓ БАЛ ЗАВЕРШЁН</b>Ты прошёл все фигуры. «...летит, летит; взглянуть назад не смеет».`;
+    box.innerHTML = `<b>✓ БАЛ ЗАВЕРШЁН</b>Ты прошёл все фигуры.`;
     win.querySelector('.window-body').appendChild(box);
     buttons.forEach(b => b.disabled = true);
     statusEl.textContent = 'Победа!';
@@ -1117,7 +1153,7 @@ function renderBall(win){
     box.className = 'success-box';
     box.style.background = 'linear-gradient(135deg,#fde0e0,#fecaca)';
     box.style.borderColor = '#c0392b'; box.style.color = '#7f1d1d';
-    box.innerHTML = `<b>✗ СБИЛСЯ С РИТМА</b>Попробуй ещё раз — просто открой «Бал.exe» заново.`;
+    box.innerHTML = `<b>✗ СБИЛСЯ С РИТМА</b>Попробуй ещё раз!`;
     win.querySelector('.window-body').appendChild(box);
     buttons.forEach(b => b.disabled = true);
     statusEl.textContent = 'Конец танца.';
@@ -1140,7 +1176,7 @@ function renderBall(win){
         accepting = false;
         if (level >= maxLevel) setTimeout(finishWin, 400);
         else {
-          level++; statusEl.textContent = 'Отлично! Следующий уровень...';
+          level++; statusEl.textContent = 'Отлично! Следующий...';
           setTimeout(startRound, 900);
         }
       }
@@ -1151,9 +1187,7 @@ function renderBall(win){
 
 /* --- ШИФР --- */
 function renderCipher(win){
-  // Выбираем случайную фразу
   const phrase = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
-  // Выбираем случайный тип шифра
   const cipherType = ['caesar', 'substitution', 'dancing'][Math.floor(Math.random()*3)];
   
   let encoded = '';
@@ -1166,52 +1200,41 @@ function renderCipher(win){
     encoded = caesarEncode(phrase, 1);
   } else if (cipherType === 'substitution') {
     typeName = 'Шифр подстановки';
-    // Генерируем случайный алфавит цифр
     const letters = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
-    const digits = '123456789'.split(''); // упростим, чтобы не путать
-    // Просто присвоим каждой букве двузначное число для красоты
     const dict = {};
-    for(let i=0; i<letters.length; i++){
-        dict[letters[i]] = String(i+1).padStart(2, '0');
-    }
+    for(let i=0; i<letters.length; i++) dict[letters[i]] = String(i+1).padStart(2, '0');
     encoded = phrase.toUpperCase().split('').map(ch => dict[ch] ? dict[ch] : ch).join(' ');
-    // Подсказка - первые 5 букв
-    helpHTML = `Каждой букве соответствует число. Вот начало алфавита: <br>
-    <code>А=${dict['А']}, Б=${dict['Б']}, В=${dict['В']}, Г=${dict['Г']}, Д=${dict['Д']}</code>...`;
+    helpHTML = `Каждой букве соответствует число. Начало: <br><code>А=${dict['А']}, Б=${dict['Б']}, В=${dict['В']}, Г=${dict['Г']}</code>...`;
   } else {
     typeName = 'Пляшущие человечки';
-    helpHTML = `Каждому символу соответствует буква. Пробелы сохранены.`;
-    // Простая замена на символы
+    helpHTML = `Каждому символу соответствует буква. Это шифр из рассказа Конан Дойла.`;
     const letters = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
     const symbols = '☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼'.split('');
     const dict = {};
-    for(let i=0; i<letters.length; i++){
-        dict[letters[i]] = symbols[i];
-    }
+    for(let i=0; i<letters.length; i++) dict[letters[i]] = symbols[i];
     encoded = phrase.toUpperCase().split('').map(ch => dict[ch] ? dict[ch] : ch).join(' ');
-    helpHTML = `Этот шифр использовал Конан Дойл в рассказе «Пляшущие человечки». Попробуй угадать буквы по частым повторениям.`;
   }
 
   win.innerHTML = `
-    <div class="titlebar"><span>🔐 Тайнопись.exe — Расшифруй свой день</span><button class="close">×</button></div>
+    <div class="titlebar"><span>🔐 Тайнопись.exe</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: шифровальная машина, лампа, бумаги, чернильные пятна</div>
+      <div class="portrait">ЗДЕСЬ: шифровальная машина, лампа, бумаги</div>
       
       <div class="cipher-info">
-        <b>📜 Справка о шифре: ${typeName}</b><br>
-        ${cipherType === 'caesar' ? 'Этот шифр использовал ещё Юлий Цезарь для секретной переписки. В литературе встречается у Свифта и Эдгара По.' : ''}
-        ${cipherType === 'substitution' ? 'Шифры подстановки — одни из древнейших. Ими пользовались алхимики и писатели, чтобы спрятать смысл от непосвящённых.' : ''}
-        ${cipherType === 'dancing' ? 'Шифр из рассказа Артура Конан Дойла «Пляшущие человечки». Символы обозначают буквы.' : ''}
+        <b>📜 ${typeName}</b><br>
+        ${cipherType === 'caesar' ? 'Шифр Юлия Цезаря. В литературе встречается у Свифта и По.' : ''}
+        ${cipherType === 'substitution' ? 'Древний шифр подстановки. Им пользовались алхимики и писатели.' : ''}
+        ${cipherType === 'dancing' ? 'Шифр из рассказа Артура Конан Дойла «Пляшущие человечки».' : ''}
       </div>
 
-      <p>Система вытянула для тебя случайную строку. Расшифруй её — и узнай своё предсказание.</p>
+      <p>Расшифруй строку и узнай предсказание.</p>
 
       <div class="cipher-box">${encoded}</div>
       
       <div class="cipher-help">${helpHTML}</div>
 
       <div class="input-row">
-        <input type="text" id="cipherInput" placeholder="Введи расшифровку...">
+        <input type="text" id="cipherInput" placeholder="Введи текст...">
         <button class="btn" id="cipherCheck">Проверить</button>
       </div>
       
@@ -1234,7 +1257,7 @@ function renderCipher(win){
         <div class="cipher-result">
           <b>✓ РАСШИФРОВАНО</b>
           «${phrase}»<br><br>
-          <span style="font-size:11px;">Пусть эта строка станет твоим предсказанием на сегодня. В ней скрыт ответ на твой вопрос.</span>
+          <span style="font-size:11px;">Пусть эта строка станет твоим предсказанием на сегодня.</span>
         </div>
       `;
       res.style.display = 'block';
@@ -1243,7 +1266,7 @@ function renderCipher(win){
     } else {
       input.style.borderColor = '#ef4444';
       setTimeout(() => input.style.borderColor = '#d4af37', 500);
-      toast('✗ Неверно', 'Попробуй ещё раз. Обрати внимание на таблицу.');
+      toast('✗ Неверно', 'Попробуй ещё раз.');
     }
   });
 }
@@ -1280,20 +1303,20 @@ function renderSecret(win){
   win.innerHTML = `
     <div class="titlebar"><span>📜 А.С.Пушкин.архив</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="portrait">ЗДЕСЬ: Пушкин — перо, свеча, рукопись, заснеженное окно</div>
-      <p><b>Все процессы работают штатно. Все файлы восстановлены. Все филиалы подключены.</b></p>
-      <p>Герои вернулись на свои страницы. Строфы — на места. Бал отзвучал. Карты сданы. Сеть СЦДБ активна.</p>
+      <div class="portrait">ЗДЕСЬ: Пушкин — перо, свеча, рукопись</div>
+      <p><b>Все процессы работают штатно.</b></p>
+      <p>Герои вернулись на страницы. Строфы — на места. Сеть СЦДБ активна.</p>
       <p style="margin-top:14px; font-style:italic; color:#2d5a45;">
-        «Что дружба? Лёгкий пыл похмелья...» — прошептал кто-то из глубины системы и растворился.
+        «Что дружба? Лёгкий пыл похмелья...» — прошептал кто-то и растворился.
       </p>
-      <p style="margin-top:18px;"><b>Спасибо, администратор. До новой сессии.</b></p>
+      <p style="margin-top:18px;"><b>Спасибо, администратор.</b></p>
     </div>`;
   if (!gotAchv.has('legend')) setTimeout(() => unlock('legend'), 400);
 }
 
 function updateProgress(){
-  document.getElementById('progress').textContent =
-    `Файлы: ${fixedFiles.size}/6 • Филиалы: ${doneBranches.size}/${BRANCHES.length} • Игры: ${doneApps.size}/3`;
+  const pr = document.getElementById('progress');
+  pr.textContent = `Файлы: ${fixedFiles.size}/6 • Филиалы: ${doneBranches.size}/${BRANCHES.length} • Игры: ${doneApps.size}/3`;
 }
 
 /* ---------- ЗАПУСК ---------- */
@@ -1309,9 +1332,8 @@ setInterval(() => {
 }, 1000);
 
 if (!PROFILE) {
-  setTimeout(chooseProfile, 3000); // открываем выбор профиля после загрузки
+  setTimeout(chooseProfile, 3000);
 } else {
-  // обновляем readme
   setTimeout(() => {
     const readme = document.querySelector('.icon[data-id="readme"]');
     if (readme) readme.click();
