@@ -174,10 +174,7 @@
   /* ШИФР */
   .cipher-info { background: #1a3324; color: #d1a352; border: 2px solid; border-color: #fff #000 #000 #fff; padding: 10px 14px; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 16px; line-height: 1.5; }
   .cipher-box { background: #0d1710; color: #86a38e; padding: 16px; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 2px; text-align: center; margin: 16px 0; border: 2px solid; border-color: #000 #86a38e #86a38e #000; white-space: pre-wrap; word-wrap: break-word; line-height: 1.8; }
-  
-  /* Стиль для эмодзи-ребуса */
   .cipher-emoji { font-size: 28px; letter-spacing: 8px; padding: 20px 10px; line-height: 1.6; }
-
   .cipher-help { background: #dcd3bd; border: 1px dashed #8b7d5b; padding: 12px; font-size: 12px; color: #2b2b2b; margin: 12px 0; line-height: 1.5; }
   .cipher-help code { background: #e8e0cc; padding: 2px 6px; font-family: 'Courier New', monospace; color: #1a3324; border: 1px solid #8b7d5b; }
   .cipher-result { margin-top: 16px; padding: 16px; background: #fffdf5; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b; font-size: 14px; font-style: italic; color: #1a3324; line-height: 1.6; }
@@ -616,7 +613,6 @@ const PROPHECIES = [
   "Мечты, мечты! Где ваша сладость?"
 ];
 
-// База для эмодзи-ребусов
 const EMOJI_RIDDLES = [
   { q: "❄️ и ☀️; день ✨!", a: "Мороз и солнце; день чудесный!" },
   { q: "Что ⏳, то будет 🍬", a: "Что пройдёт, то будет мило" },
@@ -748,6 +744,8 @@ function unlock(k){
     document.querySelector('.window[data-id="achv"] .close').click();
     openWindow('achv');
   }
+  // ВАЖНО: Проверяем секретный архив при каждом получении ачивки
+  checkAndUnlockSecret();
 }
 
 function toast(title, sub){
@@ -1299,12 +1297,11 @@ function renderBall(win){
       setTimeout(() => {
         btn.classList.remove('lit');
         i++;
-        // Пауза 200мс после выключения, чтобы даже двойное мигание было заметно
         setTimeout(nextStep, 200);
-      }, 400); // Горит 400мс
+      }, 400);
     }
     
-    setTimeout(nextStep, 400); // Начальная пауза перед первым миганием
+    setTimeout(nextStep, 400);
   }
 
   function startRound(){
@@ -1360,7 +1357,7 @@ function renderBall(win){
   startRound();
 }
 
-/* --- ШИФР (ЭМОДЗИ-РЕБУС) --- */
+/* --- ШИФР --- */
 function renderCipher(win){
   const cipherType = ['caesar1', 'caesar3', 'emoji'][Math.floor(Math.random()*3)];
   
