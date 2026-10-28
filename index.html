@@ -1182,15 +1182,21 @@ function renderApp(win, app){
 
 /* --- КАЛЕНДАРЬ --- */
 function renderCalendar(win){
-  // Проверка, загрузился ли calendar.js
   if (typeof PUSHKIN_EVENTS === 'undefined') {
     win.innerHTML = `
       <div class="titlebar"><span>📅 Пушкинский календарь</span><button class="close">×</button></div>
-      <div class="window-body">
-        <p style="color:red;">Ошибка: файл calendar.js не найден или не загружен.</p>
-      </div>`;
+      <div class="window-body"><p style="color:red;">Ошибка: файл calendar.js не найден.</p></div>`;
     return;
   }
+
+  // Функция для красивого вывода даты (из 01-29 делает 29 января)
+  const formatDate = (dateStr) => {
+    const parts = dateStr.split('-');
+    const m = parseInt(parts[0], 10);
+    const d = parseInt(parts[1], 10);
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    return `${d} ${months[m - 1]}`;
+  };
 
   const today = new Date();
   const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -1207,7 +1213,7 @@ function renderCalendar(win){
     const randomEv = PUSHKIN_EVENTS[Math.floor(Math.random() * PUSHKIN_EVENTS.length)];
     todayHTML = `
       <div style="font-size:12px; opacity:0.7; margin-bottom:10px;">На этот день в календаре пока нет записей. Но вот интересный факт из другого дня:</div>
-      <div><b>${randomEv.date} (${randomEv.year} г.)</b><br>${randomEv.text}</div>
+      <div><b>${formatDate(randomEv.date)} (${randomEv.year} г.)</b><br>${randomEv.text}</div>
     `;
   }
 
@@ -1226,7 +1232,7 @@ function renderCalendar(win){
 
       <div class="question" style="margin-top:20px;">🔍 Поиск по книге событий</div>
       <div class="input-row">
-        <input type="text" id="calSearch" placeholder="Введи год, дату (ММ-ДД) или слово...">
+        <input type="text" id="calSearch" placeholder="Введи год, дату или слово...">
       </div>
       <div id="calResults" style="max-height: 200px; overflow-y: auto; border-top: 1px solid var(--input-border); padding-top: 10px;">
         <div style="opacity:0.5; font-size:12px; text-align:center; margin-top:10px;">Введи хотя бы 2 символа для поиска по базе...</div>
@@ -1243,6 +1249,7 @@ function renderCalendar(win){
       return;
     }
 
+    // Ищем и по тексту, и по сырой дате (ММ-ДД), и по году
     const results = PUSHKIN_EVENTS.filter(ev => 
       ev.text.toLowerCase().includes(query) || 
       ev.date.includes(query) || 
@@ -1257,7 +1264,7 @@ function renderCalendar(win){
     const displayResults = results.slice(0, 30);
     let html = displayResults.map(ev => `
       <div style="font-size:12px; margin-bottom:8px; padding:10px; background:var(--input-bg); border-left:3px solid var(--titlebar-bg); border-radius:4px;">
-        <b style="color:var(--titlebar-bg);">${ev.date} (${ev.year} г.)</b><br>
+        <b style="color:var(--titlebar-bg);">${formatDate(ev.date)} (${ev.year} г.)</b><br>
         ${ev.text}
       </div>
     `).join('');
