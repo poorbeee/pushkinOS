@@ -4,11 +4,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>ПУШКИН.ОС v4.0 — СЦДБ</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a3324">
 <style>
-  /* БАЗОВЫЕ НАСТРОЙКИ */
+  /* ЦВЕТОВЫЕ ПЕРЕМЕННЫЕ (ДЛЯ ТЕМ) */
+  :root {
+    --bg-desk: #0d1710;
+    --bg-window: #e8e0cc;
+    --text-main: #2b2b2b;
+    --titlebar-bg: #1a3324;
+    --titlebar-text: #d1a352;
+    --border-light: #fff;
+    --border-dark: #000;
+    --btn-bg: #1a3324;
+    --btn-text: #d1a352;
+    --input-bg: #fffdf5;
+    --input-border: #8b7d5b;
+  }
+
+  body.light-mode {
+    --bg-desk: #dcd3bd;
+    --bg-window: #fffdf5;
+    --text-main: #1a3324;
+    --titlebar-bg: #2c4a35;
+    --titlebar-text: #fff;
+    --border-light: #fff;
+    --border-dark: #8b7d5b;
+    --btn-bg: #2c4a35;
+    --btn-text: #fff;
+    --input-bg: #fff;
+    --input-border: #a89877;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
-  body { font-family: Georgia, 'Times New Roman', serif; background: #0a120c; color: #2b2b2b; }
+  
+  /* ЗАПРЕТ ВЫДЕЛЕНИЯ ТЕКСТА */
+  body { 
+    font-family: Georgia, 'Times New Roman', serif; 
+    background: var(--bg-desk); 
+    color: var(--text-main); 
+    transition: background-color 0.3s;
+    user-select: none; /* Блокируем выделение */
+    -webkit-user-select: none;
+  }
+  
+  /* Разрешаем выделять только в блокноте и текстовых полях */
+  input, textarea, .notes-textarea {
+    user-select: text;
+    -webkit-user-select: text;
+  }
 
   #boot { position: fixed; inset: 0; background: #0a120c; color: #a3b5a9;
     padding: 20px; font-family: 'Courier New', monospace; font-size: 14px; line-height: 2; 
@@ -18,78 +64,79 @@
   @keyframes fadeIn { to { opacity: 1 } }
   #boot.hide { opacity: 0; pointer-events: none; transition: opacity .6s; }
 
-  /* РАБОЧИЙ СТОЛ */
   #desktop { position: fixed; inset: 0;
-    background-color: #0d1710;
+    background-color: var(--bg-desk);
     background-image: 
       radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4)), 
-      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4));
+      linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0.1)), 
+      linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0.1));
     background-size: 20px 20px, 20px 20px, 20px 20px;
     background-position: 0 0, 0 0, 10px 10px;
     overflow: hidden; transition: background-image 0.5s ease; }
   
-  /* КОНТЕЙНЕР ИКОНОК */
   #icons { position: absolute; top: 20px; left: 15px; display: flex; flex-direction: column;
     gap: 12px; width: 120px; z-index: 2; bottom: 60px; overflow-y: auto; overflow-x: hidden; padding: 0 4px 10px 4px; }
   #icons::-webkit-scrollbar { width: 6px; }
   #icons::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 3px; }
   #icons::-webkit-scrollbar-thumb { background: #2c4a35; border-radius: 3px; border: 1px solid #0a120c; }
-  #icons::-webkit-scrollbar-thumb:hover { background: #86a38e; }
 
   .icon { position: relative; display: flex; flex-direction: column; align-items: center;
     padding: 8px 4px; cursor: pointer; color: #dce5df; text-align: center; width: 100%;
     border: 1px solid transparent; transition: none; user-select: none; }
   .icon:hover { background: rgba(255,255,255,.05); border: 1px dashed #86a38e; }
+  body.light-mode .icon { color: #1a3324; }
+  body.light-mode .icon:hover { background: rgba(0,0,0,.05); border: 1px dashed #2c4a35; }
   .icon .glyph { font-size: 32px; line-height: 1; margin-bottom: 4px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.8)); }
+  body.light-mode .icon .glyph { filter: drop-shadow(1px 1px 0px rgba(255,255,255,0.8)); }
   .icon .label { font-family: 'Courier New', monospace; font-size: 12px; text-shadow: 1px 1px 0 #000; 
     width: 100%; word-break: break-word; line-height: 1.2; }
+  body.light-mode .icon .label { text-shadow: none; font-weight: bold; }
   .icon.fixed::after { content: '✓'; position: absolute; top: 2px; right: 6px;
     width: 16px; height: 16px; background: #2c4a35; color: #a3b5a9;
-    border: 1px solid #86a38e;
-    display: flex; align-items: center; justify-content: center; font-size: 12px;
+    border: 1px solid #86a38e; display: flex; align-items: center; justify-content: center; font-size: 12px;
     font-family: sans-serif; box-shadow: 1px 1px 0 #000; }
   .icon.secret { display: none; }
   .icon.secret.unlocked { display: flex; }
 
-  /* ОКНА */
   #windows { position: absolute; inset: 0; pointer-events: none; }
-  .window { position: absolute; width: 600px; pointer-events: auto; background: #e8e0cc;
-    border: 2px solid; border-color: #fff #000 #000 #fff; box-shadow: 4px 4px 0 rgba(0,0,0,0.8);
-    overflow: hidden; display: flex; flex-direction: column; }
   
-  .titlebar { background: #1a3324; color: #d1a352;
+  /* АДАПТИВНОЕ ОКНО (теперь не вылезает даже на маленьких экранах) */
+  .window { position: absolute; width: 600px; max-width: 95vw; max-height: 90vh; pointer-events: auto; background: var(--bg-window);
+    border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); 
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
+  
+  .titlebar { background: var(--titlebar-bg); color: var(--titlebar-text);
     padding: 6px 8px; display: flex; justify-content: space-between; align-items: center;
     cursor: move; font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; 
-    user-select: none; border-bottom: 2px solid #000; flex-shrink: 0; }
+    user-select: none; border-bottom: 2px solid var(--border-dark); flex-shrink: 0; }
   
-  .close { background: #1a3324; color: #d1a352; border: 1px solid; border-color: #fff #000 #000 #fff; 
+  .close { background: var(--titlebar-bg); color: var(--titlebar-text); border: 1px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); 
     width: 20px; height: 20px; cursor: pointer; font-weight: bold; font-size: 12px;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: sans-serif; }
-  .close:active { border-color: #000 #fff #fff #000; }
+  .close:active { border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); }
   
-  .window-body { padding: 20px; color: #2b2b2b; font-size: 14px; line-height: 1.6;
+  .window-body { padding: 20px; color: var(--text-main); font-size: 14px; line-height: 1.6;
     overflow-y: auto; flex-grow: 1; }
   .window-body p { margin-bottom: 12px; }
   
-  /* БЛОК КАРТИНКИ */
   .portrait { width: 100%; height: 300px; margin-bottom: 16px;
-    border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b;
+    border: 2px solid; border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; flex-shrink: 0; background: #dcd3bd; padding: 4px; }
-  .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
   .status { background: #2b2b2b; color: #a3b5a9; padding: 8px 10px; font-size: 12px;
     font-family: 'Courier New', monospace; margin-bottom: 16px; border: 2px solid;
     border-color: #000 #fff #fff #000; }
   .status.ok { color: #86a38e; }
+  body.light-mode .status { background: #e8e0cc; color: #1a3324; border-color: #8b7d5b #fff #fff #8b7d5b; }
 
-  .question { font-weight: bold; margin: 16px 0 12px; color: #1a3324; font-size: 15px; }
-  .option { display: block; width: 100%; text-align: left; background: #dcd3bd;
-    border: 1px solid #8b7d5b; color: #2b2b2b; padding: 10px 12px; margin-bottom: 8px;
+  .question { font-weight: bold; margin: 16px 0 12px; color: var(--titlebar-bg); font-size: 15px; }
+  .option { display: block; width: 100%; text-align: left; background: var(--input-bg);
+    border: 1px solid var(--input-border); color: var(--text-main); padding: 10px 12px; margin-bottom: 8px;
     cursor: pointer; font-family: inherit; font-size: 14px;
-    box-shadow: 2px 2px 0 #8b7d5b; transition: none; line-height: 1.4; }
-  .option:hover:not(:disabled) { background: #e8e0cc; border-color: #2c4a35; box-shadow: 2px 2px 0 #2c4a35; }
+    box-shadow: 2px 2px 0 var(--input-border); transition: none; line-height: 1.4; }
+  .option:hover:not(:disabled) { background: var(--bg-window); border-color: var(--btn-bg); box-shadow: 2px 2px 0 var(--btn-bg); }
   .option:active:not(:disabled) { box-shadow: none; transform: translate(2px, 2px); }
   .option.correct { background: #b8d4be; border-color: #2c4a35; color: #0a120c; box-shadow: none; font-weight: bold; }
   .option.wrong { background: #e6c1c1; border-color: #7a2323; color: #4a0e0e; box-shadow: none; animation: shake .3s; }
@@ -101,44 +148,51 @@
   .success-box b { display: block; margin-bottom: 6px; font-size: 14px; font-family: 'Courier New', monospace; }
 
   .input-row { display: flex; gap: 8px; margin: 12px 0; }
-  .input-row input { flex: 1; padding: 8px 10px; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b;
-    font-family: 'Courier New', monospace; font-size: 14px; background: #fffdf5; color: #1a3324; }
-  .input-row input:focus { outline: none; background: #fff; border-color: #2c4a35 #fff #fff #2c4a35; }
+  .input-row input { flex: 1; padding: 8px 10px; border: 2px solid; border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border);
+    font-family: 'Courier New', monospace; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
+  .input-row input:focus { outline: none; background: var(--bg-window); border-color: var(--btn-bg) var(--border-light) var(--border-light) var(--btn-bg); }
   
-  .btn { padding: 8px 16px; background: #1a3324; color: #d1a352; border: 2px solid; 
-    border-color: #2c4a35 #000 #000 #2c4a35; cursor: pointer; font-family: 'Courier New', monospace; 
+  .btn { padding: 8px 16px; background: var(--btn-bg); color: var(--btn-text); border: 2px solid; 
+    border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); cursor: pointer; font-family: 'Courier New', monospace; 
     font-weight: bold; font-size: 13px; flex-shrink: 0; }
-  .btn:active { border-color: #000 #2c4a35 #2c4a35 #000; background: #0d1710; }
+  .btn:active { border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); filter: brightness(0.8); }
   .btn:disabled { background: #556b5b; color: #a3b5a9; border-color: #556b5b; cursor: default; }
   .btn.small { padding: 4px 8px; font-size: 11px; }
+  .btn-hint { background: #4a3b16; color: #d1a352; border-color: #7a5c00 #000 #000 #7a5c00; margin-top: 10px; display: none; }
+  .btn-hint:active { border-color: #000 #7a5c00 #7a5c00 #000; }
 
-  /* ПАНЕЛЬ ЗАДАЧ */
   #taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
     background: #1a1a1a; border-top: 2px solid #444;
     display: flex; align-items: center; padding: 0 6px; gap: 8px; color: #c0c0c0;
     font-family: 'Courier New', monospace; font-size: 12px; z-index: 9998; }
-  #start { padding: 4px 12px; background: #1a3324; color: #d1a352; font-weight: bold;
-    border: 2px solid; border-color: #2c4a35 #000 #000 #2c4a35; cursor: pointer; font-size: 13px;
+  body.light-mode #taskbar { background: #dcd3bd; border-top-color: #8b7d5b; color: #1a3324; }
+  
+  #start { padding: 4px 12px; background: var(--titlebar-bg); color: var(--titlebar-text); font-weight: bold;
+    border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); cursor: pointer; font-size: 13px;
     font-family: inherit; display: flex; align-items: center; gap: 6px; height: 32px; }
-  #start:active { border-color: #000 #2c4a35 #2c4a35 #000; background: #0d1710; }
+  #start:active { border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); filter: brightness(0.8); }
   #progress { flex: 1; text-align: left; letter-spacing: 1px; font-size: 12px; white-space: nowrap; 
     overflow: hidden; text-overflow: ellipsis; padding-left: 10px; color: #86a38e; }
+  body.light-mode #progress { color: #2c4a35; }
     
-  /* АЧИВКИ */
   #achv { display: flex; gap: 6px; font-size: 16px; margin-right: 10px; }
   #achv .a { opacity: .3; filter: grayscale(1); cursor: help; transition: .3s; }
   #achv .a.on { opacity: 1; filter: none; transform: scale(1.1); }
   
   #clock { font-variant-numeric: tabular-nums; background: #1a1a1a; border: 1px solid; border-color: #000 #444 #444 #000;
     padding: 4px 12px; color: #e8e0cc; font-size: 12px; }
+  body.light-mode #clock { background: #e8e0cc; color: #1a3324; border-color: #8b7d5b #fff #fff #8b7d5b; }
   
-  #startmenu { position: absolute; bottom: 48px; left: 6px; background: #e8e0cc;
-    border: 2px solid; border-color: #fff #000 #000 #fff; padding: 4px; display: none;
-    min-width: 240px; z-index: 9999; box-shadow: 4px 4px 0 rgba(0,0,0,0.8); max-height: 70vh; overflow-y: auto; }
+  .sound-btn { background: transparent; border: none; color: #c0c0c0; font-size: 18px; cursor: pointer; padding: 0 5px; }
+  body.light-mode .sound-btn { color: #1a3324; }
+
+  #startmenu { position: absolute; bottom: 48px; left: 6px; background: var(--bg-window);
+    border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); padding: 4px; display: none;
+    min-width: 240px; max-width: 90vw; z-index: 9999; box-shadow: 4px 4px 0 rgba(0,0,0,0.5); max-height: 70vh; overflow-y: auto; }
   #startmenu.open { display: block; }
-  #startmenu .mi { padding: 8px 12px; cursor: pointer; font-size: 13px; color: #1a3324; display: flex; gap: 10px; align-items: center; }
-  #startmenu .mi:hover { background: #1a3324; color: #d1a352; }
-  .final .titlebar { background: #4a3b16; color: #d1a352; }
+  #startmenu .mi { padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--text-main); display: flex; gap: 10px; align-items: center; }
+  #startmenu .mi:hover { background: var(--titlebar-bg); color: var(--titlebar-text); }
+  .final .titlebar { background: #4a3b16; color: var(--titlebar-text); }
 
   /* ТАРО */
   .tarot-spread { display: flex; gap: 10px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
@@ -147,111 +201,120 @@
   .tcard.flipped .tcard-inner { transform: rotateY(180deg); }
   .tcard-face { position: absolute; inset: 0; backface-visibility: hidden;
     display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; text-align: center; font-size: 11px; border: 2px solid; }
-  .tcard-front { background: #1a3324; color: #d1a352; border-color: #86a38e #000 #000 #86a38e; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+  .tcard-front { background: var(--titlebar-bg); color: var(--titlebar-text); border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
   .tcard-front .sym { font-size: 36px; margin-bottom: 8px; filter: drop-shadow(0 0 5px rgba(209, 163, 82, 0.5)); }
   .tcard-front .pos { font-size: 10px; letter-spacing: 2px; opacity: .9; margin-top: 6px; font-family: 'Courier New', monospace;}
-  .tcard-back { background: #e8e0cc; color: #1a3324; transform: rotateY(180deg); border-color: #8b7d5b #fff #fff #8b7d5b; justify-content: flex-start; padding-top: 12px; overflow-y: auto; }
+  .tcard-back { background: var(--bg-window); color: var(--text-main); transform: rotateY(180deg); border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); justify-content: flex-start; padding-top: 12px; overflow-y: auto; }
   .tcard-back .sym { font-size: 24px; }
   .tcard-back .nm { font-weight: bold; font-size: 12px; margin: 4px 0 6px; }
-  .tcard-back .mn { font-size: 10px; line-height: 1.3; color: #4a4a4a; padding: 0 6px; }
-  .reading { margin-top: 16px; padding: 14px; background: #dcd3bd; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b; font-size: 13px; display: none; }
+  .tcard-back .mn { font-size: 10px; line-height: 1.3; color: var(--text-main); padding: 0 6px; }
+  .reading { margin-top: 16px; padding: 14px; background: var(--input-bg); border: 2px solid; border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); font-size: 13px; display: none; }
   .reading.show { display: block; }
-  .reading h4 { font-size: 14px; color: #1a3324; margin: 10px 0 6px; }
+  .reading h4 { font-size: 14px; color: var(--titlebar-bg); margin: 10px 0 6px; }
   .reading h4:first-child { margin-top: 0; }
-  .reading .total { margin-top: 12px; padding-top: 12px; border-top: 2px dashed #8b7d5b; font-style: italic; color: #1a3324; }
+  .reading .total { margin-top: 12px; padding-top: 12px; border-top: 2px dashed var(--input-border); font-style: italic; color: var(--text-main); }
 
   /* БАЛ */
-  .ball-stage { background: #1a3324; border: 2px solid; border-color: #000 #86a38e #86a38e #000; padding: 16px; text-align: center; margin-bottom: 16px; }
-  .ball-round { color: #d1a352; font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px; margin-bottom: 10px; }
-  .ball-status { color: #e8e0cc; font-size: 13px; min-height: 22px; margin-bottom: 12px; font-style: italic; }
+  .ball-stage { background: var(--titlebar-bg); border: 2px solid; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); padding: 16px; text-align: center; margin-bottom: 16px; }
+  .ball-round { color: var(--titlebar-text); font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px; margin-bottom: 10px; }
+  .ball-status { color: var(--bg-window); font-size: 13px; min-height: 22px; margin-bottom: 12px; font-style: italic; }
   .ball-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .ball-move { padding: 12px 8px; background: #dcd3bd; color: #1a3324; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: none; }
-  .ball-move:active:not(:disabled) { border-color: #8b7d5b #fff #fff #8b7d5b; }
+  .ball-move { padding: 12px 8px; background: var(--input-bg); color: var(--text-main); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold; border: 2px solid; border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: none; }
+  .ball-move:active:not(:disabled) { border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); }
   .ball-move:disabled { opacity: .5; cursor: default; }
-  .ball-move.lit { background: #d1a352; color: #1a3324; border-color: #fff #8b7d5b #8b7d5b #fff; box-shadow: inset 0 0 15px rgba(255,255,255,0.5); }
+  .ball-move.lit { background: var(--titlebar-text); color: var(--titlebar-bg); border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); box-shadow: inset 0 0 15px rgba(255,255,255,0.5); }
   .ball-move .ic { font-size: 24px; }
 
   /* ШИФР */
-  .cipher-info { background: #1a3324; color: #d1a352; border: 2px solid; border-color: #fff #000 #000 #fff; padding: 10px 14px; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 16px; line-height: 1.5; }
+  .cipher-info { background: var(--titlebar-bg); color: var(--titlebar-text); border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); padding: 10px 14px; font-size: 12px; font-family: 'Courier New', monospace; margin-bottom: 16px; line-height: 1.5; }
   .cipher-box { background: #0d1710; color: #86a38e; padding: 16px; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 2px; text-align: center; margin: 16px 0; border: 2px solid; border-color: #000 #86a38e #86a38e #000; white-space: pre-wrap; word-wrap: break-word; line-height: 1.8; }
+  body.light-mode .cipher-box { background: #e8e0cc; color: #1a3324; border-color: #8b7d5b #fff #fff #8b7d5b; }
   .cipher-emoji { font-size: 28px; letter-spacing: 8px; padding: 20px 10px; line-height: 1.6; }
-  .cipher-help { background: #dcd3bd; border: 1px dashed #8b7d5b; padding: 12px; font-size: 12px; color: #2b2b2b; margin: 12px 0; line-height: 1.5; }
-  .cipher-help code { background: #e8e0cc; padding: 2px 6px; font-family: 'Courier New', monospace; color: #1a3324; border: 1px solid #8b7d5b; }
-  .cipher-result { margin-top: 16px; padding: 16px; background: #fffdf5; border: 2px solid; border-color: #8b7d5b #fff #fff #8b7d5b; font-size: 14px; font-style: italic; color: #1a3324; line-height: 1.6; }
+  .cipher-help { background: var(--input-bg); border: 1px dashed var(--input-border); padding: 12px; font-size: 12px; color: var(--text-main); margin: 12px 0; line-height: 1.5; }
+  .cipher-help code { background: var(--bg-window); padding: 2px 6px; font-family: 'Courier New', monospace; color: var(--text-main); border: 1px solid var(--input-border); }
+  .cipher-result { margin-top: 16px; padding: 16px; background: var(--input-bg); border: 2px solid; border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); font-size: 14px; font-style: italic; color: var(--text-main); line-height: 1.6; }
   .cipher-result b { font-style: normal; display: block; margin-bottom: 8px; font-family: 'Courier New', monospace; }
 
   /* СООТНЕСИ */
   .match-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
   .match-col { display: flex; flex-direction: column; gap: 8px; }
-  .match-item { padding: 10px 12px; background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; cursor: pointer; font-family: inherit; font-size: 12px; text-align: left; color: #2b2b2b; line-height: 1.35; transition: none; }
-  .match-item:hover:not(.matched) { border-color: #fff #1a3324 #1a3324 #fff; background: #e8e0cc; }
-  .match-item.selected { background: #d1a352; color: #1a3324; border-color: #fff #4a3b16 #4a3b16 #fff; font-weight: bold; }
-  .match-item.matched { background: #b8d4be; border-color: #fff #2c4a35 #2c4a35 #fff; color: #0a120c; cursor: default; opacity: .9; }
-  .match-item.wrong { animation: shake .3s; background: #e6c1c1; border-color: #fff #7a2323 #7a2323 #fff; }
+  .match-item { padding: 10px 12px; background: var(--input-bg); border: 2px solid; border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); cursor: pointer; font-family: inherit; font-size: 12px; text-align: left; color: var(--text-main); line-height: 1.35; transition: none; }
+  .match-item:hover:not(.matched) { border-color: var(--border-light) var(--btn-bg) var(--btn-bg) var(--border-light); background: var(--bg-window); }
+  .match-item.selected { background: var(--titlebar-text); color: var(--titlebar-bg); border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); font-weight: bold; }
+  .match-item.matched { background: #b8d4be; border-color: var(--border-light) #2c4a35 #2c4a35 var(--border-light); color: #0a120c; cursor: default; opacity: .9; }
+  .match-item.wrong { animation: shake .3s; background: #e6c1c1; border-color: var(--border-light) #7a2323 #7a2323 var(--border-light); }
 
   /* СЦДБ */
   .scdb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
-  .scdb-node { background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; padding: 10px 6px; cursor: pointer; font-family: inherit; text-align: center; color: #2b2b2b; }
-  .scdb-node:hover { background: #e8e0cc; }
-  .scdb-node:active { border-color: #8b7d5b #fff #fff #8b7d5b; }
-  .scdb-node.done { background: #b8d4be; border-color: #fff #2c4a35 #2c4a35 #fff; }
-  .scdb-emoji { font-size: 24px; margin-bottom: 6px; filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.3)); }
+  .scdb-node { background: var(--input-bg); border: 2px solid; border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); padding: 10px 6px; cursor: pointer; font-family: inherit; text-align: center; color: var(--text-main); display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
+  .scdb-node:hover { background: var(--bg-window); }
+  .scdb-node:active { border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); }
+  .scdb-node.done { background: #b8d4be; border-color: var(--border-light) #2c4a35 #2c4a35 var(--border-light); }
+  
+  .scdb-house { width: 100px; height: 60px; object-fit: contain; margin-bottom: 6px; }
+  
   .scdb-num { font-family: 'Courier New', monospace; font-size: 11px; color: #4a3b16; font-weight: bold; }
   .scdb-name { font-size: 12px; font-weight: bold; margin: 4px 0; }
-  .scdb-addr { font-size: 10px; color: #5a5a5a; }
+  .scdb-addr { font-size: 10px; color: var(--text-main); opacity: 0.7; }
   .scdb-off { font-family: 'Courier New', monospace; font-size: 10px; color: #7a2323; margin-top: 6px; }
   .scdb-check { font-family: 'Courier New', monospace; font-size: 10px; color: #0a120c; font-weight: bold; margin-top: 6px; }
 
-  .ticket { margin-top: 20px; background: #fffdf5; border: 2px dashed #8b7d5b; padding: 12px; }
-  .ticket-head { font-weight: bold; color: #1a3324; margin-bottom: 12px; font-size: 13px; text-align: center; letter-spacing: 1px; }
+  .ticket { margin-top: 20px; background: var(--input-bg); border: 2px dashed var(--input-border); padding: 12px; }
+  .ticket-head { font-weight: bold; color: var(--titlebar-bg); margin-bottom: 12px; font-size: 13px; text-align: center; letter-spacing: 1px; }
   .ticket-stamps { display: flex; justify-content: space-around; gap: 6px; flex-wrap: wrap; }
-  .stamp { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed #8b7d5b; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; color: #8b7d5b; opacity: .4; background: #e8e0cc; }
+  .stamp { width: 42px; height: 42px; border-radius: 50%; border: 2px dashed var(--input-border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14px; color: var(--input-border); opacity: .4; background: var(--bg-window); }
   .stamp span { font-family: 'Courier New', monospace; font-size: 9px; margin-top: 2px; }
   .stamp.on { opacity: 1; border-style: solid; border-color: #2c4a35; color: #1a3324; background: #b8d4be; }
-  .ticket-foot { text-align: center; margin-top: 12px; font-size: 12px; color: #4a3b16; font-weight: bold; }
+  .ticket-foot { text-align: center; margin-top: 12px; font-size: 12px; color: var(--text-main); font-weight: bold; }
 
   /* НАСТРОЙКИ (ОБОИ) */
   .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-  .wp-card { background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-  .wp-card.locked { opacity: 0.6; background: #c4bba7; }
-  .wp-preview { width: 100%; height: 80px; background: #1a3324; border: 1px solid #8b7d5b; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .wp-card { background: var(--input-bg); border: 2px solid; border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .wp-card.locked { opacity: 0.6; background: var(--bg-window); }
+  .wp-preview { width: 100%; height: 80px; background: var(--titlebar-bg); border: 1px solid var(--input-border); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
   .wp-preview img { width: 100%; height: 100%; object-fit: cover; }
-  .wp-lock { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #d1a352; font-weight: bold; font-family: 'Courier New', monospace; font-size: 11px; text-align: center; padding: 4px; }
+  .wp-lock { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--titlebar-text); font-weight: bold; font-family: 'Courier New', monospace; font-size: 11px; text-align: center; padding: 4px; }
   .wp-lock .ic { font-size: 20px; margin-bottom: 4px; }
   .wp-actions { display: flex; gap: 4px; }
   .wp-actions button { flex: 1; }
   
   /* ДОСТИЖЕНИЯ (СПИСОК) */
   .achv-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-  .achv-card { background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; padding: 10px; display: flex; align-items: center; gap: 10px; opacity: 0.5; filter: grayscale(1); }
-  .achv-card.unlocked { opacity: 1; filter: none; background: #e8e0cc; border-color: #fff #2c4a35 #2c4a35 #fff; }
+  .achv-card { background: var(--input-bg); border: 2px solid; border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); padding: 10px; display: flex; align-items: center; gap: 10px; opacity: 0.5; filter: grayscale(1); }
+  .achv-card.unlocked { opacity: 1; filter: none; background: var(--bg-window); border-color: var(--border-light) #2c4a35 #2c4a35 var(--border-light); }
   .achv-card .a-icon { font-size: 28px; flex-shrink: 0; }
-  .achv-card .a-info h4 { font-size: 13px; color: #1a3324; font-family: 'Courier New', monospace; margin-bottom: 2px; }
-  .achv-card .a-info p { font-size: 11px; color: #4a4a4a; line-height: 1.3; margin: 0; }
+  .achv-card .a-info h4 { font-size: 13px; color: var(--titlebar-bg); font-family: 'Courier New', monospace; margin-bottom: 2px; }
+  .achv-card .a-info p { font-size: 11px; color: var(--text-main); line-height: 1.3; margin: 0; }
   
   /* ПРОФИЛЬ */
-  .profile-card { padding: 16px; background: #dcd3bd; border: 2px solid; border-color: #fff #8b7d5b #8b7d5b #fff; margin-bottom: 12px; cursor: pointer; transition: none; }
-  .profile-card:hover { background: #e8e0cc; }
-  .profile-card:active { border-color: #8b7d5b #fff #fff #8b7d5b; }
-  .profile-card h3 { font-size: 16px; color: #1a3324; margin-bottom: 8px; font-family: 'Courier New', monospace; }
-  .profile-card p { font-size: 13px; color: #2b2b2b; line-height: 1.5; }
+  .profile-card { padding: 16px; background: var(--input-bg); border: 2px solid; border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); margin-bottom: 12px; cursor: pointer; transition: none; }
+  .profile-card:hover { background: var(--bg-window); }
+  .profile-card:active { border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); }
+  .profile-card h3 { font-size: 16px; color: var(--titlebar-bg); margin-bottom: 8px; font-family: 'Courier New', monospace; }
+  .profile-card p { font-size: 13px; color: var(--text-main); line-height: 1.5; }
+
+  /* БЛОКНОТ */
+  .notes-textarea { width: 100%; height: 300px; padding: 10px; font-family: 'Courier New', monospace; 
+    font-size: 14px; background: var(--input-bg); border: 2px solid; border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border);
+    color: var(--text-main); resize: none; outline: none; }
 
   /* МОБИЛЬНАЯ ВЕРСИЯ */
   @media (max-width: 768px) {
     #icons { position: absolute; top: 10px; left: 10px; right: 10px; bottom: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: auto; overflow-y: visible; padding-bottom: 0; z-index: 10; }
-    .icon { padding: 10px 4px; background: rgba(13, 23, 16, 0.8); border: 1px solid #2c4a35; }
-    .window { position: absolute; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; width: calc(100% - 16px) !important; max-height: calc(100% - 80px) !important; margin: 0; box-shadow: 6px 6px 0 rgba(0,0,0,0.8); }
+    .icon { padding: 10px 4px; background: rgba(13, 23, 16, 0.8); border: 1px solid var(--titlebar-bg); }
+    body.light-mode .icon { background: rgba(232, 224, 204, 0.9); }
+    
+    /* На мобилках окна по центру, чтобы точно влезали */
+    .window { position: fixed; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; width: 95vw !important; max-height: calc(100% - 80px) !important; margin: 0; box-shadow: 6px 6px 0 rgba(0,0,0,0.8); }
+    
     .titlebar { cursor: default; padding: 8px 10px; font-size: 14px; }
     .close { width: 24px; height: 24px; }
     .window-body { padding: 16px; font-size: 14px; }
-    
     .portrait { height: 240px; }
-    
     #taskbar { height: 50px; gap: 6px; padding: 0 6px; }
     #start { padding: 6px 10px; font-size: 12px; height: 36px; }
     #progress { font-size: 11px; padding-left: 4px; }
     #achv { display: none; }
-    
     .option { padding: 12px; font-size: 14px; }
     .input-row { flex-direction: column; gap: 10px; }
     .btn { width: 100%; padding: 12px; font-size: 15px; }
@@ -272,6 +335,13 @@
 </head>
 <body>
 
+<audio id="ambientAudio" loop>
+  <source src="audio/bg_ambient.mp3" type="audio/mpeg">
+</audio>
+<audio id="clickAudio">
+  <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+
 <div id="boot" onclick="this.classList.add('hide')"><div id="bootlog"></div></div>
 
 <div id="desktop">
@@ -282,6 +352,7 @@
     <button id="start">⊞ ПУШКИН.ОС</button>
     <div id="progress">Загрузка...</div>
     <div id="achv"></div>
+    <button class="sound-btn" id="soundToggle" title="Вкл/Выкл звук">🔊</button>
     <div id="clock">--:--:--</div>
   </div>
   
@@ -289,6 +360,42 @@
 </div>
 
 <script>
+// ЗАПРЕТ ПРАВОЙ КНОПКИ МЫШИ
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+/* =========================================================
+   ЗВУКИ
+   ========================================================= */
+const ambientAudio = document.getElementById('ambientAudio');
+const clickAudio = document.getElementById('clickAudio');
+let soundEnabled = localStorage.getItem('pushkin_sound') !== 'off';
+const soundToggle = document.getElementById('soundToggle');
+
+function updateSoundIcon() {
+  soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+  if (soundEnabled && ambientAudio.paused) {
+    ambientAudio.volume = 0.3;
+    ambientAudio.play().catch(() => {});
+  } else if (!soundEnabled) {
+    ambientAudio.pause();
+  }
+}
+
+soundToggle.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('pushkin_sound', soundEnabled ? 'on' : 'off');
+  updateSoundIcon();
+  playClick();
+});
+
+function playClick() {
+  if (soundEnabled) {
+    clickAudio.currentTime = 0;
+    clickAudio.volume = 0.5;
+    clickAudio.play().catch(() => {});
+  }
+}
+
 /* =========================================================
    СОСТОЯНИЕ И ПРОФИЛЬ
    ========================================================= */
@@ -306,6 +413,41 @@ function saveState(){
   localStorage.setItem('pushkin_doneApps', JSON.stringify([...doneApps]));
   localStorage.setItem('pushkin_doneBranches', JSON.stringify([...doneBranches]));
   localStorage.setItem('pushkin_gotAchv', JSON.stringify([...gotAchv]));
+}
+
+/* =========================================================
+   КАЛЕНДАРЬ ПУШКИНА
+   ========================================================= */
+const PUSHKIN_CALENDAR = [
+  { m: 1, d: 1, text: "1825 год. Пушкин в Михайловском. Начало работы над трагедией «Борис Годунов»." },
+  { m: 1, d: 29, text: "1837 год. Роковая дуэль на Чёрной речке. Поэт смертельно ранен." },
+  { m: 2, d: 8, text: "1837 год. Траурная церемония. Прах Пушкина перезахоронен в Святогорском монастыре." },
+  { m: 4, d: 6, text: "1830 год. Сватовство к Наталье Гончаровой. Получено согласие." },
+  { m: 5, d: 26, text: "1799 год. Рождение Александра Сергеевича Пушкина в Москве." },
+  { m: 6, d: 6, text: "1880 год. Открытие первого памятника Пушкину в Москве (в этот день)." },
+  { m: 8, d: 21, text: "1831 год. Венчание с Натальей Гончаровой в церкви Большого Вознесения." },
+  { m: 9, d: 1, text: "1826 год. Пушкин вызван в Москву на аудиенцию к Николаю I после ссылки." },
+  { m: 10, d: 19, text: "1811 год. Открытие Царскосельского лицея. Пушкин — среди первых воспитанников." },
+  { m: 10, d: 26, text: "1836 год. Пушкин заканчивает роман «Капитанская дочка»." },
+  { m: 11, d: 4, text: "1836 год. День рождения лицейского братства. Пушкин пишет стихотворение «Была пора...»." },
+  { m: 12, d: 14, text: "1825 год. Восстание декабристов на Сенатской площади. Пушкин в Михайловском." }
+];
+
+function getTodayEvent() {
+  const today = new Date();
+  const m = today.getMonth() + 1;
+  const d = today.getDate();
+  
+  const event = PUSHKIN_CALENDAR.find(e => e.m === m && e.d === d);
+  if (event) return event.text;
+  
+  const quotes = [
+    "«Что пройдёт, то будет мило»",
+    "«И жить торопится, и чувствовать спешит»",
+    "«Тьмы низких истин мне дороже нас возвышающий обман»",
+    "«Мы все учились понемногу чему-нибудь и как-нибудь»"
+  ];
+  return quotes[Math.floor(Math.random() * quotes.length)];
 }
 
 /* =========================================================
@@ -332,44 +474,11 @@ function applyWallpaper() {
   } else {
     desk.style.backgroundImage = `
       radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4)), 
-      linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4))
+      linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0.1)), 
+      linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0.1))
     `;
     desk.style.backgroundSize = '20px 20px, 20px 20px, 20px 20px';
   }
-}
-
-function chooseProfile(){
-  const win = document.createElement('div');
-  win.className = 'window';
-  win.dataset.id = 'profile';
-  win.style.width = '90%'; win.style.maxWidth = '500px';
-  win.style.left = '50%'; win.style.top = '45%';
-  win.style.transform = 'translate(-50%,-50%)';
-  win.style.zIndex = ++zIndex;
-  win.innerHTML = `
-    <div class="titlebar"><span>👤 Выбор профиля</span></div>
-    <div class="window-body">
-      <p style="margin-bottom:16px;">Прежде чем войти, выбери свой путь.</p>
-      <div class="profile-card" data-profile="intern">
-        <h3>🎓 Стажёр</h3>
-        <p>Подсказки включены. Ошибки не сбрасывают прогресс. Идеально для знакомства.</p>
-      </div>
-      <div class="profile-card" data-profile="keeper">
-        <h3>🗝️ Хранитель</h3>
-        <p>Без подсказок. Ошибки в «порядке» сбрасывают шаг. Для любителей вызова.</p>
-      </div>
-    </div>`;
-  document.getElementById('windows').appendChild(win);
-  win.querySelectorAll('.profile-card').forEach(c => {
-    c.addEventListener('click', () => {
-      PROFILE = c.dataset.profile;
-      localStorage.setItem('pushkin_profile', PROFILE);
-      win.remove();
-      toast('👤 Профиль выбран', PROFILE === 'intern' ? 'Стажёр' : 'Хранитель');
-      initIcons();
-    });
-  });
 }
 
 /* =========================================================
@@ -379,9 +488,9 @@ const FILES = [
   { id:'readme', name:'ПРОЧТИ_МЕНЯ.txt', icon:'📄', status:'ФАЙЛ ЧИТАЕМ', statusOk:true,
     portrait:'<img src="img/11.jpg" alt="Пушкин">',
     intro:`<p><b>ПУШКИН.ОС v4.0</b> — операционная система литературного архива СЦДБ.</p>
-      <p>Произошёл сбой: <b>6 файлов повреждены</b>. Имена файлов искажены — но внутри спрятаны герои и сюжеты. На рабочем столе также: <b>СЦДБ.Карта</b>, <b>Оракул</b>, <b>Бал</b>, <b>Тайнопись</b> и <b>Настройки</b>.</p>
+      <p>Произошёл сбой: <b>6 файлов повреждены</b>. Имена файлов искажены — но внутри спрятаны герои и сюжеты.</p>
       <p>Восстанови 6 файлов, подключи 5 филиалов, пройди 3 программы — и откроется секретный архив.</p>
-      <p style="opacity:.65;font-size:11px;margin-top:14px;">Выбран профиль: <b>${PROFILE === 'intern' ? '🎓 Стажёр' : '🗝️ Хранитель'}</b>. Сменить можно в меню «ПУШКИН.ОС».</p>`,
+      <p id="readme-profile-info" style="opacity:.65;font-size:11px;margin-top:14px;"></p>`,
     task:null },
 
   { id:'onegin', name:'лишний_гость.exe', icon:'⚙️',
@@ -448,7 +557,7 @@ const FILES = [
   { id:'drama', name:'тень_на_троне.exe', icon:'👑',
     status:'ПОВРЕЖДЕНИЕ: голоса героев перепутаны',
     portrait:'<img src="img/9.jpg" alt="Борис Годунов">',
-    intro:'В темноте звучат голоса. Каждому из них принадлежит своя строка. Соотнеси реплики и персонажей.<br><br><i>Подсказка: Борис Годунов видит кровавых мальчиков, а народ в финале молчит.</i>',
+    intro:'В темноте звучат голоса. Каждому из них принадлежит своя строка. Соотнеси реплики и персонажей.',
     task:{ type:'match', question:'Соотнеси цитату и героя «Бориса Годунова»',
       pairs:[
         {left:'«Достиг я высшей власти...»', right:'Борис Годунов'},
@@ -473,7 +582,7 @@ const FILES = [
         {left:'«Унылая пора! Очей очарованье!»', right:'светлая печаль'}
       ]
     },
-    success:'Строки вернулись к чувствам. «И сердце бьётся в упоенье, / И для него воскресли вновь / И божество, и вдохновенье, / И жизнь, и слёзы, и любовь».' }
+    success:'Строки вернулись к чувствам. «И сердце бьётся в упоенье...»' }
 ];
 
 /* =========================================================
@@ -484,6 +593,8 @@ const APPS = [
   { id:'tarot', name:'Оракул.exe', icon:'🎴' },
   { id:'ball',  name:'Бал.exe', icon:'💃' },
   { id:'cipher',name:'Тайнопись.exe', icon:'🔐' },
+  { id:'calendar',name:'Календарь.exe', icon:'📅' },
+  { id:'notes', name:'Блокнот.exe', icon:'📝' },
   { id:'achv',  name:'Достижения.exe', icon:'🏆' },
   { id:'settings', name:'Настройки.exe', icon:'⚙️' },
   { id:'secret',name:'А.С.Пушкин.архив', icon:'📜', secret:true }
@@ -495,7 +606,7 @@ const APPS = [
 const BRANCHES = [
   {
     id:'b1', num:'Центр', name:'Центральная библиотека им. А.С. Пушкина',
-    addr:'ул. Большая Морская, 33', emoji:'🏛️',
+    addr:'ул. Большая Морская, 33', emoji:'🏛️', house: 'img/house_center.png',
     intro:'Главное здание сети. Крупнейший фонд, редкие издания. Чтобы подключиться, «оживи архив»: соотнеси произведения Пушкина с их жанрами.',
     task:{
       type:'match', question:'Соотнеси произведение — жанр',
@@ -511,8 +622,8 @@ const BRANCHES = [
   },
   {
     id:'b2', num:'Фил. №1', name:'Библиотека «Семья и книга»',
-    addr:'ул. Маяковского, 27', emoji:'📖',
-    intro:'Филиал семейного чтения. Главная фишка — огромный фонд комиксов и графических романов, а также коллекция фантастики. Соотнеси популярный комикс и его жанр.',
+    addr:'ул. Маяковского, 27', emoji:'📖', house: 'img/house_1.png',
+    intro:'Филиал семейного чтения. Главная фишка — огромный фонд комиксов и графических романов. Соотнеси популярный комикс и его жанр.',
     task:{
       type:'match', question:'Соотнеси комикс/графический роман и его жанр',
       pairs:[
@@ -527,7 +638,7 @@ const BRANCHES = [
   },
   {
     id:'b3', num:'Фил. №2', name:'Детская библиотека истории и культуры Петербурга',
-    addr:'ул. Марата, 72', emoji:'🏰',
+    addr:'ул. Марата, 72', emoji:'🏰', house: 'img/house_2.png',
     intro:'Филиал находится в знаменитом Доме Бажанова — памятнике северного модерна. Пройдись по залам особняка: найди, что в нём есть на самом деле, а что — выдумка.',
     task:{
       type:'quiz', question:'Чего НЕТ в особняке Бажанова?',
@@ -543,8 +654,8 @@ const BRANCHES = [
   },
   {
     id:'b4', num:'Фил. №3', name:'Детская библиотека иностранной литературы им. М.Д. Яснова',
-    addr:'3-я Советская ул., 8', emoji:'🌍',
-    intro:'В фонде этого филиала — книги на 57 языках мира! Давай проверим твою языковую интуицию. Соотнеси слово «Привет» и язык, на котором оно звучит.',
+    addr:'3-я Советская ул., 8', emoji:'🌍', house: 'img/house_3.png',
+    intro:'В фонде этого филиала — книги на 57 языках мира! Соотнеси слово «Привет» и язык, на котором оно звучит.',
     task:{
       type:'match', question:'Соотнеси слово «Привет» и язык',
       pairs:[
@@ -559,18 +670,18 @@ const BRANCHES = [
   },
   {
     id:'b5', num:'Фил. №4', name:'Библиотека на Новгородской',
-    addr:'ул. Новгородская, 5', emoji:'⭐',
-    intro:'Самый молодой филиал сети. Здесь каждое мероприятие — будь то лекция, чтение или квест — обязательно заканчивается мастер-классом. Соотнеси событие и то, что на нём мастерят.',
+    addr:'ул. Новгородская, 5', emoji:'⭐', house: 'img/house_4.png',
+    intro:'Самый молодой филиал сети. Здесь бережно хранят рукописную книгу «Священная память моей семьи». Восстанови хронологию событий блокады Ленинграда.',
     task:{
-      type:'match', question:'Что делают после мероприятия?',
-      pairs:[
-        {left:'Чтение «Сказки о царе Салтане»', right:'Мастер-класс по лепке из пластилина'},
-        {left:'Лекция о Доме Бажанова', right:'Создание архитектурного коллажа'},
-        {left:'Квест «Тайны Лукоморья»', right:'Рисование песком на световых столах'},
-        {left:'Встреча с комиксистом', right:'Создание своего мини-зина'}
+      type:'order', question:'Расставь события по порядку:',
+      lines:[
+        'Начало блокады Ленинграда (8 сентября 1941)',
+        'Прорыв блокады (операция «Искра», январь 1943)',
+        'Полное снятие блокады (27 января 1944)',
+        'День Победы (9 мая 1945)'
       ]
     },
-    success:'Мероприятия завершены. Мастер-классы прошли на ура!'
+    success:'Хронология восстановлена. «Никто не забыт, ничто не забыто».'
   }
 ];
 
@@ -596,7 +707,7 @@ const TAROT = [
 const TAROT_POSITIONS = ['Прошлое', 'Настоящее', 'Будущее', 'Совет', 'Тайное'];
 
 /* =========================================================
-   ШИФРЫ (ОБНОВЛЕНО: ЭМОДЗИ-РЕБУС)
+   ШИФРЫ
    ========================================================= */
 const PROPHECIES = [
   "Что пройдёт, то будет мило",
@@ -610,7 +721,21 @@ const PROPHECIES = [
   "Мы все учились понемногу чему-нибудь и как-нибудь",
   "Привычка свыше нам дана: замена счастию она",
   "Блажен, кто верует, тепло ему на свете!",
-  "Мечты, мечты! Где ваша сладость?"
+  "Мечты, мечты! Где ваша сладость?",
+  "Я помню чудное мгновенье",
+  "Передо мной явилась ты",
+  "Как мимолетное виденье",
+  "Как гений чистой красоты",
+  "В томленьях грусти безнадежной",
+  "В тревогах шумной суеты",
+  "Звучал мне долго голос нежный",
+  "И снились милые черты",
+  "Духовной жаждою томим",
+  "В пустыне мрачной я влачился",
+  "И шестикрылый серафим",
+  "На перепутье мне явился",
+  "Любви, надежды, тихой славы",
+  "Недолго нежил нас обман"
 ];
 
 const EMOJI_RIDDLES = [
@@ -619,7 +744,16 @@ const EMOJI_RIDDLES = [
   { q: "🍂 пора! 👁️ очарованье!", a: "Унылая пора! Очей очарованье!" },
   { q: "Мечты, мечты! 📍 ваша 🍬?", a: "Мечты, мечты! Где ваша сладость?" },
   { q: "Блажен, кто 🙏, тепло ему на 🌍!", a: "Блажен, кто верует, тепло ему на свете!" },
-  { q: "Служенье 🎶 не терпит 🏃‍♂️💨", a: "Служенье муз не терпит суеты" }
+  { q: "Служенье 🎶 не терпит 🏃‍♂️💨", a: "Служенье муз не терпит суеты" },
+  { q: "💌 к вам пишу — чего же боле?", a: "Я к вам пишу — чего же боле?" },
+  { q: "🌟 чудное мгновенье", a: "Я помню чудное мгновенье" },
+  { q: "🚶‍♂️ по цепи кругом", a: "Всё ходит по цепи кругом" },
+  { q: "💰 в вашей воле", a: "Теперь, я знаю, в вашей воле" },
+  { q: "⚔️ и 💔", a: "И жизнь, и слёзы, и любовь" },
+  { q: "🐟, 👵 и разбитое 🛁", a: "Сказка о рыбаке и рыбке" },
+  { q: "🐈 на 🌳", a: "Кот учёный на дубе" },
+  { q: "🏛️ на Морской", a: "Центральная библиотека" },
+  { q: "🛡️ и 🌹", a: "Руслан и Людмила" }
 ];
 
 /* =========================================================
@@ -646,7 +780,7 @@ function initBoot(){
     {t:'Загрузка литературных процессов...', c:''},
     {t:'Проверка целостности архивов...', c:''},
     {t:'⚠ Обнаружено 6 повреждённых файлов', c:'warn'},
-    {t:'⚠ Открыты программы: СЦДБ.Карта, Оракул, Бал, Тайнопись, Настройки', c:'warn'},
+    {t:'⚠ Открыты программы: СЦДБ.Карта, Оракул, Бал, Тайнопись, Блокнот, Календарь', c:'warn'},
     {t:'', c:''},
     {t:'Добро пожаловать, администратор.', c:'ok'},
     {t:'Нажми в любом месте, чтобы войти...', c:''}
@@ -684,7 +818,7 @@ function makeIcon(id, icon, name){
   el.className = 'icon';
   el.dataset.id = id;
   el.innerHTML = `<div class="glyph">${icon}</div><div class="label">${name}</div>`;
-  el.addEventListener('click', () => openWindow(id));
+  el.addEventListener('click', () => { playClick(); openWindow(id); });
   return el;
 }
 
@@ -695,7 +829,7 @@ function initStartMenu(){
     const mi = document.createElement('div');
     mi.className = 'mi';
     mi.innerHTML = `<span>${f.icon}</span><span>${f.name}</span>`;
-    mi.addEventListener('click', () => { openWindow(f.id); menu.classList.remove('open'); });
+    mi.addEventListener('click', () => { playClick(); openWindow(f.id); menu.classList.remove('open'); });
     menu.appendChild(mi);
   });
   
@@ -713,7 +847,7 @@ function initStartMenu(){
   menu.appendChild(reset);
 
   document.getElementById('start').addEventListener('click', e => {
-    e.stopPropagation(); menu.classList.toggle('open');
+    e.stopPropagation(); playClick(); menu.classList.toggle('open');
   });
   document.addEventListener('click', () => menu.classList.remove('open'));
   menu.addEventListener('click', e => e.stopPropagation());
@@ -744,15 +878,14 @@ function unlock(k){
     document.querySelector('.window[data-id="achv"] .close').click();
     openWindow('achv');
   }
-  // ВАЖНО: Проверяем секретный архив при каждом получении ачивки
   checkAndUnlockSecret();
 }
 
 function toast(title, sub){
   const el = document.createElement('div');
-  el.style.cssText = `position:fixed;bottom:60px;right:16px;left:16px;background:#1a3324;color:#d1a352;
-    border:2px solid; border-color:#2c4a35 #000 #000 #2c4a35; padding:12px 16px;font-size:13px;
-    z-index:99999;box-shadow:4px 4px 0 rgba(0,0,0,0.8);
+  el.style.cssText = `position:fixed;bottom:60px;right:16px;left:16px;background:var(--titlebar-bg);color:var(--titlebar-text);
+    border:2px solid; border-color:var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); padding:12px 16px;font-size:13px;
+    z-index:99999;box-shadow:4px 4px 0 rgba(0,0,0,0.5);
     font-family:'Courier New',monospace;max-width:400px;margin:0 auto;`;
   el.innerHTML = `<div style="font-weight:bold;margin-bottom:4px;">${title}</div><div style="opacity:.85;font-size:12px;">${sub}</div>`;
   document.body.appendChild(el);
@@ -779,8 +912,9 @@ function openWindow(id){
   win.dataset.id = id;
   
   if (!isMobile) {
-    win.style.left = (80 + (count % 6) * 32) + 'px';
-    win.style.top  = (30  + (count % 6) * 32) + 'px';
+    // На десктопе позиционируем так, чтобы окно точно влезло
+    win.style.left = Math.max(10, Math.min(80 + (count % 6) * 32, window.innerWidth - 620)) + 'px';
+    win.style.top  = Math.max(10, Math.min(30 + (count % 6) * 32, window.innerHeight - 420)) + 'px';
   }
   win.style.zIndex = ++zIndex;
 
@@ -790,7 +924,7 @@ function openWindow(id){
   document.getElementById('windows').appendChild(win);
   
   if (!isMobile) makeDraggable(win, win.querySelector('.titlebar'));
-  win.querySelector('.close').addEventListener('click', () => win.remove());
+  win.querySelector('.close').addEventListener('click', () => { playClick(); win.remove(); });
   if (!isMobile) win.addEventListener('mousedown', () => focusWin(win));
 }
 
@@ -845,6 +979,7 @@ function attachTaskHandler(win, task, onSolve){
   if (task.type === 'quiz') {
     win.querySelectorAll('.option').forEach(btn => {
       btn.addEventListener('click', () => {
+        playClick();
         if (+btn.dataset.i === task.correct) {
           btn.classList.add('correct');
           win.querySelectorAll('.option').forEach(b => b.disabled = true);
@@ -862,17 +997,19 @@ function attachTaskHandler(win, task, onSolve){
     lines.forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.disabled) return;
+        playClick();
         if (+btn.dataset.idx === step) {
           btn.classList.add('correct'); btn.disabled = true; step++;
           if (step === task.lines.length) onSolve();
         } else {
           btn.classList.add('wrong');
           if (PROFILE === 'keeper') {
+            toast('✗ Ошибка Хранителя', 'Прогресс сброшен. Будь внимательнее.');
             setTimeout(() => {
               btn.classList.remove('wrong');
               step = 0;
               lines.forEach(b => { b.classList.remove('correct'); b.disabled = false; });
-            }, 500);
+            }, 600);
           } else {
             setTimeout(()=>btn.classList.remove('wrong'), 500);
           }
@@ -903,6 +1040,7 @@ function attachTaskHandler(win, task, onSolve){
     win.querySelectorAll('.match-item').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.classList.contains('matched')) return;
+        playClick();
         const side = btn.dataset.side;
         if (side === 'L') {
           if (selL !== null) {
@@ -933,6 +1071,11 @@ function renderFile(win, f){
       ${f.task ? buildTaskHTML(f.task) : ''}
     </div>`;
 
+  if (f.id === 'readme') {
+    const pi = win.querySelector('#readme-profile-info');
+    if (pi) pi.innerHTML = `Выбран профиль: <b>${PROFILE === 'intern' ? '🎓 Стажёр' : '🗝️ Хранитель'}</b>. Сменить можно в меню «ПУШКИН.ОС».`;
+  }
+
   if (f.task) attachTaskHandler(win, f.task, () => solveFile(win, f));
 }
 
@@ -961,9 +1104,43 @@ function renderApp(win, app){
   if (app.id === 'tarot')  renderTarot(win);
   if (app.id === 'ball')   renderBall(win);
   if (app.id === 'cipher') renderCipher(win);
+  if (app.id === 'calendar') renderCalendar(win);
+  if (app.id === 'notes')  renderNotes(win);
   if (app.id === 'achv')   renderAchievements(win);
   if (app.id === 'settings') renderSettings(win);
   if (app.id === 'secret') renderSecret(win);
+}
+
+/* --- КАЛЕНДАРЬ --- */
+function renderCalendar(win){
+  const todayStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const event = getTodayEvent();
+  
+  win.innerHTML = `
+    <div class="titlebar"><span>📅 Пушкинский календарь</span><button class="close">×</button></div>
+    <div class="window-body">
+      <div class="portrait"><img src="img/11.jpg" alt="Пушкин"></div>
+      <p style="text-align:center;font-weight:bold;font-size:16px;color:var(--titlebar-bg);margin-bottom:10px;">${todayStr}</p>
+      <div style="background:var(--input-bg); border:2px dashed var(--input-border); padding:15px; font-style:italic; line-height:1.6; font-size:14px;">
+        ${event}
+      </div>
+      <p style="font-size:11px;opacity:0.6;margin-top:15px;text-align:center;">Основано на реальных событиях из жизни А.С. Пушкина</p>
+    </div>`;
+}
+
+/* --- БЛОКНОТ --- */
+function renderNotes(win){
+  const saved = localStorage.getItem('pushkin_notes') || '';
+  win.innerHTML = `
+    <div class="titlebar"><span>📝 Блокнот.exe</span><button class="close">×</button></div>
+    <div class="window-body" style="padding:10px;">
+      <textarea id="notesArea" class="notes-textarea" placeholder="Пиши сюда свои заметки, алфавит для шифра или догадки..."></textarea>
+    </div>`;
+  const ta = win.querySelector('#notesArea');
+  ta.value = saved;
+  ta.addEventListener('input', () => {
+    localStorage.setItem('pushkin_notes', ta.value);
+  });
 }
 
 /* --- ДОСТИЖЕНИЯ --- */
@@ -988,16 +1165,120 @@ function renderAchievements(win){
           `;
         }).join('')}
       </div>
+      
+      <button class="btn" style="margin-top:20px; width:100%;" onclick="generateTicket()">🎓 Сгенерировать читательский билет</button>
     </div>`;
 }
+
+// ГЕНЕРАЦИЯ БИЛЕТА (Canvas) — С домиками филиалов
+window.generateTicket = function() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 800;
+  canvas.height = 450;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#fcfaf2'; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = '#2b2b2b';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+
+  ctx.fillStyle = '#1a3324'; 
+  ctx.fillRect(15, 15, canvas.width - 30, 8);
+
+  ctx.fillStyle = '#2b2b2b';
+  ctx.font = 'bold 14px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('САНКТ-ПЕТЕРБУРГСКАЯ', 40, 50);
+  ctx.fillText('СПЕЦИАЛЬНАЯ ЦЕНТРАЛЬНАЯ', 40, 70);
+  ctx.fillText('ДЕТСКАЯ БИБЛИОТЕКА', 40, 90);
+  ctx.font = 'bold 18px Georgia, serif';
+  ctx.fillText('ИМ. А.С. ПУШКИНА', 40, 115);
+
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 36px Arial, sans-serif';
+  ctx.fillText('ЧИТАТЕЛЬСКИЙ', 40, 180);
+  ctx.fillText('БИЛЕТ', 40, 220);
+
+  ctx.font = 'bold 20px "Courier New", monospace';
+  ctx.fillStyle = '#7a2323';
+  const randomId = Math.floor(100000 + Math.random() * 900000);
+  ctx.fillText(`№ ${randomId}`, 40, 260);
+
+  ctx.fillStyle = '#1a3324';
+  ctx.font = 'bold 16px "Courier New", monospace';
+  ctx.fillText(`ВЛАДЕЛЕЦ: ${PROFILE === 'intern' ? 'СТАЖЁР' : 'ХРАНИТЕЛЬ'}`, 40, 300);
+  
+  ctx.font = '14px Georgia, serif';
+  ctx.fillStyle = '#2b2b2b';
+  ctx.fillText(`Восстановлено файлов: ${fixedFiles.size} / 6`, 40, 340);
+  ctx.fillText(`Подключено филиалов: ${doneBranches.size} / 5`, 40, 365);
+  ctx.fillText(`Пройдено игр: ${doneApps.size} / 3`, 40, 390);
+
+  ctx.beginPath();
+  ctx.arc(680, 390, 45, 0, Math.PI * 2);
+  ctx.strokeStyle = '#7a2323';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.font = 'bold 12px "Courier New", monospace';
+  ctx.fillStyle = '#7a2323';
+  ctx.textAlign = 'center';
+  ctx.fillText('СИСТЕМА', 680, 380);
+  ctx.fillText('ВОССТАНОВЛЕНА', 680, 395);
+  ctx.fillText('ПУШКИН.ОС', 680, 410);
+
+  const link = document.createElement('a');
+  link.download = `pushkin_ticket_${randomId}.png`;
+
+  const houses = [
+    { src: 'img/house_center.png', x: 500, y: 60, w: 100, h: 70 },
+    { src: 'img/house_1.png', x: 620, y: 60, w: 100, h: 70 },
+    { src: 'img/house_2.png', x: 500, y: 150, w: 100, h: 70 },
+    { src: 'img/house_3.png', x: 620, y: 150, w: 100, h: 70 },
+    { src: 'img/house_4.png', x: 560, y: 240, w: 100, h: 70 }
+  ];
+
+  let loadedCount = 0;
+  houses.forEach(h => {
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, h.x, h.y, h.w, h.h);
+      loadedCount++;
+      if (loadedCount === houses.length) {
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        toast('🎓 Успех', 'Билет сохранен на устройство!');
+      }
+    };
+    img.onerror = () => {
+      ctx.fillStyle = '#e8e0cc';
+      ctx.fillRect(h.x, h.y, h.w, h.h);
+      ctx.strokeStyle = '#8b7d5b';
+      ctx.strokeRect(h.x, h.y, h.w, h.h);
+      loadedCount++;
+      if (loadedCount === houses.length) {
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        toast('🎓 Успех', 'Билет сохранен на устройство!');
+      }
+    };
+    img.src = h.src;
+  });
+};
 
 /* --- НАСТРОЙКИ --- */
 function renderSettings(win){
   win.innerHTML = `
     <div class="titlebar"><span>⚙️ Настройки.exe — Персонализация</span><button class="close">×</button></div>
     <div class="window-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--input-border);">
+        <b>Тема интерфейса:</b>
+        <button class="btn small" onclick="toggleTheme()">Переключить день/ночь</button>
+      </div>
+
       <p>Выбери фон для рабочего стола. Обои открываются за достижения.</p>
-      <p style="font-size:12px;color:#4a3b16;">Твои достижения: <b>${gotAchv.size}</b></p>
+      <p style="font-size:12px;color:var(--titlebar-bg);">Твои достижения: <b>${gotAchv.size}</b></p>
       
       <div class="settings-grid">
         ${WALLPAPERS.map(wp => {
@@ -1006,7 +1287,7 @@ function renderSettings(win){
           return `
             <div class="wp-card ${isUnlocked ? '' : 'locked'}">
               <div class="wp-preview">
-                ${wp.url ? `<img src="${wp.url}" alt="${wp.name}">` : '<div style="color:#d1a352;font-size:12px;">По умолчанию</div>'}
+                ${wp.url ? `<img src="${wp.url}" alt="${wp.name}">` : '<div style="color:var(--titlebar-text);font-size:12px;">По умолчанию</div>'}
                 ${!isUnlocked ? `<div class="wp-lock"><div class="ic">🔒</div>Нужно ${wp.req} ачивки</div>` : ''}
               </div>
               <div style="font-size:12px;font-weight:bold;text-align:center;margin-bottom:4px;">${wp.name}</div>
@@ -1025,6 +1306,13 @@ function renderSettings(win){
       </div>
     </div>`;
 }
+
+window.toggleTheme = function() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('pushkin_theme', isLight ? 'light' : 'dark');
+  playClick();
+};
 
 window.setWallpaper = function(id){
   CURRENT_WALLPAPER = id;
@@ -1056,7 +1344,7 @@ function renderSCDB(win){
     <div class="titlebar"><span>🗂️ СЦДБ.Карта</span><button class="close">×</button></div>
     <div class="window-body">
       <div class="portrait"><img src="img/4.jpg" alt="СЦДБ"></div>
-      <p style="font-size:12px;color:#4a3b16;">
+      <p style="font-size:12px;color:var(--text-main);">
         Сеть СЦДБ — 5 узлов. Пройди все, и билет заполнится штампами.
       </p>
       <div class="scdb-grid" id="scdbGrid">
@@ -1064,6 +1352,7 @@ function renderSCDB(win){
           const done = doneBranches.has(b.id);
           return `
             <button class="scdb-node ${done?'done':''}" data-id="${b.id}">
+              <img src="${b.house}" class="scdb-house" alt="Домик" onerror="this.style.display='none'">
               <div class="scdb-emoji">${b.emoji}</div>
               <div class="scdb-num">${b.num}</div>
               <div class="scdb-name">${b.name}</div>
@@ -1088,6 +1377,7 @@ function renderSCDB(win){
 
   win.querySelectorAll('.scdb-node').forEach(node => {
     node.addEventListener('click', () => {
+      playClick();
       const b = BRANCHES.find(x => x.id === node.dataset.id);
       if (doneBranches.has(b.id)) { toast('✓ Уже подключён', b.name); return; }
       openBranch(b, win);
@@ -1107,8 +1397,8 @@ function openBranch(b, parentWin){
   win.dataset.id = id;
   
   if (!isMobile) {
-    win.style.left = (140 + (count%5)*30) + 'px';
-    win.style.top  = (40  + (count%5)*30) + 'px';
+    win.style.left = Math.max(10, Math.min(140 + (count%5)*30, window.innerWidth - 520)) + 'px';
+    win.style.top  = Math.max(10, Math.min(40 + (count%5)*30, window.innerHeight - 420)) + 'px';
     win.style.width = '480px';
   }
   win.style.zIndex = ++zIndex;
@@ -1116,14 +1406,17 @@ function openBranch(b, parentWin){
   win.innerHTML = `
     <div class="titlebar"><span>${b.emoji} ${b.name}</span><button class="close">×</button></div>
     <div class="window-body">
-      <div class="status">${b.emoji} ${b.addr}</div>
+      <div class="status" style="display:flex; align-items:center; gap:10px;">
+        <img src="${b.house}" style="height:40px; object-fit:contain;" onerror="this.style.display='none'">
+        <span>${b.emoji} ${b.addr}</span>
+      </div>
       <p>${b.intro}</p>
       ${buildTaskHTML(b.task)}
     </div>`;
 
   document.getElementById('windows').appendChild(win);
   if (!isMobile) makeDraggable(win, win.querySelector('.titlebar'));
-  win.querySelector('.close').addEventListener('click', () => win.remove());
+  win.querySelector('.close').addEventListener('click', () => { playClick(); win.remove(); });
   if (!isMobile) win.addEventListener('mousedown', () => focusWin(win));
 
   attachTaskHandler(win, b.task, () => branchSolved(b, win, parentWin));
@@ -1170,7 +1463,7 @@ function renderTarot(win){
     <div class="titlebar"><span>🎴 Оракул.exe</span><button class="close">×</button></div>
     <div class="window-body">
       <div class="portrait"><img src="img/1.jpg" alt="Гадалка"></div>
-      <p style="text-align:center;font-style:italic;color:#4a3b16;">
+      <p style="text-align:center;font-style:italic;color:var(--text-main);">
         Задай вопрос и вытяни три карты.<br>
         Расклад: <b>${positions.join(' • ')}</b>
       </p>
@@ -1194,45 +1487,56 @@ function renderTarot(win){
           </div>`).join('')}
       </div>
       <div class="reading" id="reading"></div>
+      ${PROFILE === 'intern' ? `<button class="btn btn-hint" id="tarotHint" style="display:block; margin-top:10px;">💡 Подсказка Стажёра</button>` : ''}
     </div>`;
 
   let flipped = 0;
   win.querySelectorAll('.tcard').forEach(card => {
     card.addEventListener('click', () => {
       if (card.classList.contains('flipped')) return;
+      playClick();
       card.classList.add('flipped'); flipped++;
       if (flipped === 3) setTimeout(() => showTarotReading(win, spread, win.querySelector('#tarotQ').value), 700);
     });
   });
+
+  const hintBtn = win.querySelector('#tarotHint');
+  if (hintBtn) {
+    hintBtn.addEventListener('click', () => {
+      toast('💡 Подсказка', `Карта Настоящего: ${spread[1].n}. Обрати внимание на её смысл.`);
+      hintBtn.disabled = true;
+    });
+  }
 }
 
 function showTarotReading(win, spread, question){
   const r = win.querySelector('#reading');
   let html = '';
   if(question.trim()){
-    html += `<div style="margin-bottom:10px;font-weight:bold;color:#1a3324;padding-bottom:8px;border-bottom:1px solid #8b7d5b;">Твой вопрос: «${question.trim()}»</div>`;
+    html += `<div style="margin-bottom:10px;font-weight:bold;color:var(--titlebar-bg);padding-bottom:8px;border-bottom:1px solid var(--input-border);">Твой вопрос: «${question.trim()}»</div>`;
   }
-  html += '<b style="color:#1a3324;font-size:14px;font-family:Courier New;">📖 Толкование</b>';
+  html += '<b style="color:var(--titlebar-bg);font-size:14px;font-family:Courier New;">📖 Толкование</b>';
   
   let badCount = 0; let goodCount = 0;
   spread.forEach(c => {
     if (c.type === 'bad') badCount++;
     if (c.type === 'good') goodCount++;
     html += `<h4>${c.pos} — ${c.s} ${c.n}</h4>
-      <div style="font-size:13px;color:#4a4a4a;margin-bottom:10px;">${c.full}</div>`;
+      <div style="font-size:13px;color:var(--text-main);margin-bottom:10px;">${c.full}</div>`;
   });
 
+  const presentCard = spread[1];
   let synthesis = '';
-  if (badCount >= 2) {
-    synthesis = `⚠️ <b>Судьба предупреждает:</b> в твоём раскладе слишком много тревожных знаков. Сейчас не время для резких решений. Возьми паузу и прислушайся к себе.`;
-  } else if (goodCount >= 2) {
-    synthesis = `✨ <b>Судьба благоволит:</b> карты говорят, что ты на верном пути. Смело иди вперёд, твои усилия скоро принесут плоды.`;
+  if (presentCard.type === 'bad') {
+    synthesis = `⚠️ <b>Судьба предупреждает:</b> Карта «${presentCard.n}» в настоящем говорит, что сейчас не время для резких решений. ${presentCard.full}`;
+  } else if (presentCard.type === 'good') {
+    synthesis = `✨ <b>Судьба благоволит:</b> Карта «${presentCard.n}» в настоящем подсказывает, что ты на верном пути. ${presentCard.full}`;
   } else {
-    synthesis = `⚖️ <b>Равновесие:</b> сейчас в твоей жизни полоса перемен. Нет явных побед или поражений, всё зависит от твоего выбора. Действуй обдуманно.`;
+    synthesis = `⚖️ <b>Равновесие:</b> Карта «${presentCard.n}» говорит о полосе перемен. Всё зависит от твоего выбора. ${presentCard.full}`;
   }
 
   if (question.trim()) {
-    synthesis += `<br><br>💡 <b>К твоему вопросу:</b> карта «${spread[1].n}» в настоящем подсказывает, что тебе стоит обратить внимание именно на это.`;
+    synthesis += `<br><br>💡 <b>К твоему вопросу:</b> Карта «${presentCard.n}» напрямую отвечает на него.`;
   }
 
   html += `<div class="total">${synthesis}</div>`;
@@ -1251,14 +1555,14 @@ function renderBall(win){
     {id:3, ic:'🩰', name:'Арабеск'}
   ];
 
-  let level = 1, maxLevel = 4, sequence = [], userInput = [], accepting = false;
+  let level = 1, maxLevel = 6, sequence = [], userInput = [], accepting = false;
 
   win.innerHTML = `
     <div class="titlebar"><span>💃 Бал.exe</span><button class="close">×</button></div>
     <div class="window-body">
       <div class="portrait"><img src="img/2.jpg" alt="Бал"></div>
-      <p style="font-size:13px;color:#4a3b16;font-style:italic;text-align:center;">
-        «Вот бал: весь в огнях...». Повтори движение.
+      <p style="font-size:13px;color:var(--text-main);font-style:italic;text-align:center;">
+        «Вот бал: весь в огнях...». Повтори движение. С каждым уровнем музыка играет быстрее!
       </p>
       <div class="ball-stage">
         <div class="ball-round" id="ballRound">УРОВЕНЬ 1 / ${maxLevel}</div>
@@ -1283,6 +1587,9 @@ function renderBall(win){
     buttons.forEach(b => b.disabled = true);
     statusEl.textContent = 'Смотри...';
     
+    const litTime = Math.max(150, 450 - (level * 50)); 
+    const pauseTime = Math.max(80, 200 - (level * 20));
+
     let i = 0;
     function nextStep() {
       if (i >= sequence.length) {
@@ -1293,15 +1600,16 @@ function renderBall(win){
       }
       const btn = win.querySelector(`.ball-move[data-id="${sequence[i]}"]`);
       btn.classList.add('lit');
+      playClick();
       
       setTimeout(() => {
         btn.classList.remove('lit');
         i++;
-        setTimeout(nextStep, 200);
-      }, 400);
+        setTimeout(nextStep, pauseTime);
+      }, litTime);
     }
     
-    setTimeout(nextStep, 400);
+    setTimeout(nextStep, litTime);
   }
 
   function startRound(){
@@ -1337,6 +1645,7 @@ function renderBall(win){
       const id = +btn.dataset.id;
       userInput.push(id);
       btn.classList.add('lit');
+      playClick();
       setTimeout(() => btn.classList.remove('lit'), 200);
 
       const i = userInput.length - 1;
@@ -1359,23 +1668,49 @@ function renderBall(win){
 
 /* --- ШИФР --- */
 function renderCipher(win){
-  const cipherType = ['caesar1', 'caesar3', 'emoji'][Math.floor(Math.random()*3)];
+  const cipherTypes = ['caesar1', 'caesar3', 'caesar-1', 'caesar-3', 'emoji', 'crypto'];
+  const cipherType = cipherTypes[Math.floor(Math.random()*cipherTypes.length)];
   
   let displayContent = '';
   let helpHTML = '';
   let typeName = '';
   let answer = '';
 
-  if (cipherType === 'caesar1') {
-    typeName = 'Шифр Цезаря (+1)';
-    helpHTML = `Каждая буква сдвинута на 1 вперед в алфавите (включая Ё).<br><br><b>Пример:</b> А → Б, Б → В... Я → А.`;
+  if (cipherType.startsWith('caesar')) {
+    const shift = parseInt(cipherType.replace('caesar', ''));
+    typeName = `Шифр Цезаря (${shift > 0 ? '+' : ''}${shift})`;
+    
+    if (shift > 0) {
+      helpHTML = `Каждая буква сдвинута на ${shift} вперед в алфавите (включая Ё).<br><br><b>Пример:</b> А → ${caesarEncode('А', shift)}, Б → ${caesarEncode('Б', shift)}...`;
+    } else {
+      helpHTML = `Каждая буква сдвинута на ${Math.abs(shift)} назад в алфавите (включая Ё).<br><br><b>Пример:</b> Я → ${caesarEncode('Я', shift)}, Ю → ${caesarEncode('Ю', shift)}...`;
+    }
+    
     answer = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
-    displayContent = `<div class="cipher-box">${caesarEncode(answer, 1)}</div>`;
-  } else if (cipherType === 'caesar3') {
-    typeName = 'Шифр Цезаря (+3)';
-    helpHTML = `Каждая буква сдвинута на 3 вперед в алфавите (включая Ё).<br><br><b>Пример:</b> А → Г, Б → Д... Я → В.`;
+    displayContent = `<div class="cipher-box">${caesarEncode(answer, shift)}</div>`;
+  } else if (cipherType === 'crypto') {
+    typeName = 'Криптограмма';
     answer = PROPHECIES[Math.floor(Math.random() * PROPHECIES.length)];
-    displayContent = `<div class="cipher-box">${caesarEncode(answer, 3)}</div>`;
+    
+    const alphabet = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+    const shuffled = alphabet.split('').sort(() => Math.random() - 0.5);
+    const dict = {};
+    for(let i=0; i<alphabet.length; i++) {
+        dict[alphabet[i]] = shuffled[i];
+    }
+    
+    let crypted = answer.toUpperCase().split('').map(ch => dict[ch] || ch).join('');
+    
+    const hintIdx1 = 0;
+    const hintIdx2 = Math.floor(answer.length / 2);
+    let hintStr = '';
+    for(let i=0; i<alphabet.length; i++) {
+        if (alphabet[i] === answer[hintIdx1]) hintStr += `${alphabet[i]}=${shuffled[i]} `;
+        if (alphabet[i] === answer[hintIdx2]) hintStr += `${alphabet[i]}=${shuffled[i]} `;
+    }
+    
+    helpHTML = `Это шифр простой замены. Каждая буква заменена на другую.<br><br><b>Подсказка:</b> <code>${hintStr}</code>`;
+    displayContent = `<div class="cipher-box">${crypted}</div>`;
   } else {
     typeName = 'Эмодзи-Ребус';
     helpHTML = `Каждое эмодзи заменяет слово или часть слова.<br><br><b>Подсказка:</b> это известная строка Александра Сергеевича Пушкина.`;
@@ -1404,6 +1739,7 @@ function renderCipher(win){
       </div>
       
       <div id="cipherResult"></div>
+      ${PROFILE === 'intern' ? `<button class="btn btn-hint" id="cipherHint" style="display:block;">💡 Подсказка Стажёра</button>` : ''}
     </div>`;
 
   const input = win.querySelector('#cipherInput');
@@ -1414,6 +1750,7 @@ function renderCipher(win){
   const correctClean = clean(answer);
 
   btn.addEventListener('click', () => {
+    playClick();
     if (clean(input.value) === correctClean) {
       btn.disabled = true; input.disabled = true;
       btn.style.background = '#2c4a35'; btn.style.color = '#86a38e'; btn.textContent = 'Верно!';
@@ -1430,10 +1767,20 @@ function renderCipher(win){
       if (!doneApps.has('cipher')) { doneApps.add('cipher'); saveState(); unlock('hacker'); updateProgress(); }
     } else {
       input.style.borderColor = '#7a2323';
-      setTimeout(() => input.style.borderColor = '#2c4a35 #fff #fff #2c4a35', 500);
+      setTimeout(() => input.style.borderColor = 'var(--input-border) var(--border-light) var(--border-light) var(--input-border)', 500);
       toast('✗ Неверно', 'Попробуй ещё раз.');
     }
   });
+
+  const hintBtn = win.querySelector('#cipherHint');
+  if (hintBtn) {
+    hintBtn.addEventListener('click', () => {
+      const words = answer.split(' ');
+      const firstWord = words[0];
+      toast('💡 Подсказка', `Первое слово: ${firstWord.slice(0, 2)}...`);
+      hintBtn.disabled = true;
+    });
+  }
 }
 
 function caesarEncode(text, shift) {
@@ -1441,7 +1788,7 @@ function caesarEncode(text, shift) {
   return text.toUpperCase().split('').map(ch => {
     const idx = alphabet.indexOf(ch);
     if (idx === -1) return ch;
-    return alphabet[(idx + shift) % alphabet.length];
+    return alphabet[((idx + shift) % alphabet.length + alphabet.length) % alphabet.length];
   }).join('');
 }
 
@@ -1471,7 +1818,7 @@ function renderSecret(win){
       <div class="portrait"><img src="img/11.jpg" alt="Пушкин"></div>
       <p><b>Все процессы работают штатно.</b></p>
       <p>Герои вернулись на страницы. Строфы — на места. Сеть СЦДБ активна.</p>
-      <p style="margin-top:16px; font-style:italic; color:#2c4a35;">
+      <p style="margin-top:16px; font-style:italic; color:var(--titlebar-bg);">
         «Что дружба? Лёгкий пыл похмелья...» — прошептал кто-то и растворился.
       </p>
       <p style="margin-top:20px;"><b>Спасибо, администратор.</b></p>
@@ -1491,6 +1838,11 @@ initStartMenu();
 renderAchv();
 updateProgress();
 applyWallpaper();
+updateSoundIcon();
+
+if (localStorage.getItem('pushkin_theme') === 'light') {
+  document.body.classList.add('light-mode');
+}
 
 setInterval(() => {
   const d = new Date(); const p = n => String(n).padStart(2,'0');
@@ -1505,6 +1857,11 @@ if (!PROFILE) {
     if (readme) readme.click();
     document.querySelector('.window[data-id="readme"]')?.remove();
   }, 3200);
+}
+
+// PWA Registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
 </body>
