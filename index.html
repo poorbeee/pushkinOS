@@ -46,11 +46,10 @@
     background: var(--bg-desk); 
     color: var(--text-main); 
     transition: background-color 0.3s;
-    user-select: none; /* Блокируем выделение */
+    user-select: none;
     -webkit-user-select: none;
   }
   
-  /* Разрешаем выделять только в блокноте и текстовых полях */
   input, textarea, .notes-textarea {
     user-select: text;
     -webkit-user-select: text;
@@ -100,7 +99,7 @@
 
   #windows { position: absolute; inset: 0; pointer-events: none; }
   
-  /* АДАПТИВНОЕ ОКНО (теперь не вылезает даже на маленьких экранах) */
+  /* АДАПТИВНОЕ ОКНО */
   .window { position: absolute; width: 600px; max-width: 95vw; max-height: 90vh; pointer-events: auto; background: var(--bg-window);
     border: 2px solid; border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light); 
     box-shadow: 4px 4px 0 rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; }
@@ -303,10 +302,7 @@
     #icons { position: absolute; top: 10px; left: 10px; right: 10px; bottom: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: auto; overflow-y: visible; padding-bottom: 0; z-index: 10; }
     .icon { padding: 10px 4px; background: rgba(13, 23, 16, 0.8); border: 1px solid var(--titlebar-bg); }
     body.light-mode .icon { background: rgba(232, 224, 204, 0.9); }
-    
-    /* На мобилках окна по центру, чтобы точно влезали */
     .window { position: fixed; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; width: 95vw !important; max-height: calc(100% - 80px) !important; margin: 0; box-shadow: 6px 6px 0 rgba(0,0,0,0.8); }
-    
     .titlebar { cursor: default; padding: 8px 10px; font-size: 14px; }
     .close { width: 24px; height: 24px; }
     .window-body { padding: 16px; font-size: 14px; }
@@ -342,7 +338,8 @@
   <source src="audio/click.mp3" type="audio/mpeg">
 </audio>
 
-<div id="boot" onclick="this.classList.add('hide')"><div id="bootlog"></div></div>
+<!-- ЭКРАН ЗАГРУЗКИ (теперь привязан к функции dismissBoot) -->
+<div id="boot" onclick="dismissBoot()"><div id="bootlog"></div></div>
 
 <div id="desktop">
   <div id="icons"></div>
@@ -402,6 +399,7 @@ function playClick() {
 let PROFILE = localStorage.getItem('pushkin_profile') || null;
 let CURRENT_WALLPAPER = localStorage.getItem('pushkin_wallpaper') || 'default';
 let zIndex = 10;
+let bootDismissed = false;
 
 const fixedFiles = new Set(JSON.parse(localStorage.getItem('pushkin_fixedFiles') || '[]'));
 const doneApps = new Set(JSON.parse(localStorage.getItem('pushkin_doneApps') || '[]'));
@@ -413,6 +411,59 @@ function saveState(){
   localStorage.setItem('pushkin_doneApps', JSON.stringify([...doneApps]));
   localStorage.setItem('pushkin_doneBranches', JSON.stringify([...doneBranches]));
   localStorage.setItem('pushkin_gotAchv', JSON.stringify([...gotAchv]));
+}
+
+/* =========================================================
+   ЛОГИКА ЗАГРУЗКИ И ВЫБОРА ПРОФИЛЯ
+   ========================================================= */
+function dismissBoot() {
+  if (bootDismissed) return;
+  bootDismissed = true;
+  
+  document.getElementById('boot').classList.add('hide');
+  
+  setTimeout(() => {
+    if (!PROFILE) {
+      chooseProfile();
+    } else {
+      const readme = document.querySelector('.icon[data-id="readme"]');
+      if (readme) readme.click();
+      document.querySelector('.window[data-id="readme"]')?.remove();
+    }
+  }, 600); // Ждем, пока экран загрузки исчезнет
+}
+
+function chooseProfile(){
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.dataset.id = 'profile';
+  win.style.width = '90%'; win.style.maxWidth = '500px';
+  win.style.left = '50%'; win.style.top = '45%';
+  win.style.transform = 'translate(-50%,-50%)';
+  win.style.zIndex = 99999; // Поднимаем на самый верх
+  win.innerHTML = `
+    <div class="titlebar"><span>👤 Выбор профиля</span></div>
+    <div class="window-body">
+      <p style="margin-bottom:16px;">Прежде чем войти, выбери свой путь.</p>
+      <div class="profile-card" data-profile="intern">
+        <h3>🎓 Стажёр</h3>
+        <p>Подсказки включены. Ошибки не сбрасывают прогресс. Идеально для знакомства.</p>
+      </div>
+      <div class="profile-card" data-profile="keeper">
+        <h3>🗝️ Хранитель</h3>
+        <p>Без подсказок. Любая ошибка сбрасывает прогресс задачи. Для любителей вызова.</p>
+      </div>
+    </div>`;
+  document.getElementById('windows').appendChild(win);
+  win.querySelectorAll('.profile-card').forEach(c => {
+    c.addEventListener('click', () => {
+      PROFILE = c.dataset.profile;
+      localStorage.setItem('pushkin_profile', PROFILE);
+      win.remove();
+      toast('👤 Профиль выбран', PROFILE === 'intern' ? 'Стажёр' : 'Хранитель');
+      initIcons();
+    });
+  });
 }
 
 /* =========================================================
@@ -787,12 +838,16 @@ function initBoot(){
   ];
   const log = document.getElementById('bootlog'); let i = 0;
   const t = setInterval(()=>{
-    if (i >= lines.length) { clearInterval(t); return; }
+    if (i >= lines.length) { 
+      clearInterval(t); 
+      setTimeout(dismissBoot, 1500); // Автоматически скрываем экран, если юзер не кликнул
+      return; 
+    }
     const d = document.createElement('div');
     d.className = 'line ' + lines[i].c;
     d.textContent = lines[i].t;
     log.appendChild(d); i++;
-  }, 200);
+  }, 150);
 }
 
 function initIcons(){
@@ -912,7 +967,6 @@ function openWindow(id){
   win.dataset.id = id;
   
   if (!isMobile) {
-    // На десктопе позиционируем так, чтобы окно точно влезло
     win.style.left = Math.max(10, Math.min(80 + (count % 6) * 32, window.innerWidth - 620)) + 'px';
     win.style.top  = Math.max(10, Math.min(30 + (count % 6) * 32, window.innerHeight - 420)) + 'px';
   }
@@ -1848,16 +1902,6 @@ setInterval(() => {
   const d = new Date(); const p = n => String(n).padStart(2,'0');
   document.getElementById('clock').textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }, 1000);
-
-if (!PROFILE) {
-  setTimeout(chooseProfile, 3000);
-} else {
-  setTimeout(() => {
-    const readme = document.querySelector('.icon[data-id="readme"]');
-    if (readme) readme.click();
-    document.querySelector('.window[data-id="readme"]')?.remove();
-  }, 3200);
-}
 
 // PWA Registration
 if ('serviceWorker' in navigator) {
