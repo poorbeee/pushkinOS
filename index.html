@@ -1185,35 +1185,48 @@ function renderCalendar(win){
   if (typeof PUSHKIN_EVENTS === 'undefined') {
     win.innerHTML = `
       <div class="titlebar"><span>📅 Пушкинский календарь</span><button class="close">×</button></div>
-      <div class="window-body"><p style="color:red;">Ошибка: файл calendar.js не найден.</p></div>`;
+      <div class="window-body"><p style="color:red;">Ошибка: файл calendar.js не найден или не загружен.</p></div>`;
     return;
   }
 
-  // Функция для красивого вывода даты (из 01-29 делает 29 января)
-  const formatDate = (dateStr) => {
-    const parts = dateStr.split('-');
-    const m = parseInt(parts[0], 10);
-    const d = parseInt(parts[1], 10);
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    return `${d} ${months[m - 1]}`;
-  };
+  const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  const formatDate = (month, day) => `${day} ${months[month - 1]}`;
 
   const today = new Date();
-  const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayMonth = today.getMonth() + 1;
+  const todayDay = today.getDate();
   const todayFormatted = today.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
   
-  const todayEvents = PUSHKIN_EVENTS.filter(e => e.date === todayStr);
+  const todayEvents = PUSHKIN_EVENTS.filter(e => e.month === todayMonth && e.day === todayDay);
   
   let todayHTML = '';
   if (todayEvents.length > 0) {
-    todayHTML = todayEvents.map(e => 
-      `<div style="margin-bottom:10px;"><b>${e.year} год.</b> ${e.text}</div>`
-    ).join('');
+    todayHTML = todayEvents.map(e => `
+      <div style="margin-bottom:15px; padding-bottom:10px; border-bottom:1px dashed var(--input-border);">
+        <div style="font-family:'Courier New', monospace; font-size:12px; color:#7a2323; margin-bottom:4px;">
+          ${e.year} год ${e.oldStyle ? `(ст. стиль: ${e.oldStyle})` : ''}
+        </div>
+        <div style="font-weight:bold; font-size:15px; color:var(--titlebar-bg); margin-bottom:6px;">${e.title}</div>
+        <div style="font-size:13px; line-height:1.5; margin-bottom:8px;">${e.description}</div>
+        ${e.works && e.works.length > 0 ? `
+          <div style="font-size:12px; color:#4a3b16;">
+            <b>📖 Произведения:</b> <i>${e.works.join(', ')}</i>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
   } else {
     const randomEv = PUSHKIN_EVENTS[Math.floor(Math.random() * PUSHKIN_EVENTS.length)];
     todayHTML = `
       <div style="font-size:12px; opacity:0.7; margin-bottom:10px;">На этот день в календаре пока нет записей. Но вот интересный факт из другого дня:</div>
-      <div><b>${formatDate(randomEv.date)} (${randomEv.year} г.)</b><br>${randomEv.text}</div>
+      <div>
+        <div style="font-family:'Courier New', monospace; font-size:12px; color:#7a2323; margin-bottom:4px;">${formatDate(randomEv.month, randomEv.day)} (${randomEv.year} г.)</div>
+        <div style="font-weight:bold; font-size:15px; color:var(--titlebar-bg); margin-bottom:6px;">${randomEv.title}</div>
+        <div style="font-size:13px; line-height:1.5; margin-bottom:8px;">${randomEv.description}</div>
+        ${randomEv.works && randomEv.works.length > 0 ? `
+          <div style="font-size:12px; color:#4a3b16;"><b>📖 Произведения:</b> <i>${randomEv.works.join(', ')}</i></div>
+        ` : ''}
+      </div>
     `;
   }
 
@@ -1232,9 +1245,9 @@ function renderCalendar(win){
 
       <div class="question" style="margin-top:20px;">🔍 Поиск по книге событий</div>
       <div class="input-row">
-        <input type="text" id="calSearch" placeholder="Введи год, дату или слово...">
+        <input type="text" id="calSearch" placeholder="Введи год, дату, слово или произведение...">
       </div>
-      <div id="calResults" style="max-height: 200px; overflow-y: auto; border-top: 1px solid var(--input-border); padding-top: 10px;">
+      <div id="calResults" style="max-height: 250px; overflow-y: auto; border-top: 1px solid var(--input-border); padding-top: 10px;">
         <div style="opacity:0.5; font-size:12px; text-align:center; margin-top:10px;">Введи хотя бы 2 символа для поиска по базе...</div>
       </div>
     </div>`;
@@ -1249,12 +1262,16 @@ function renderCalendar(win){
       return;
     }
 
-    // Ищем и по тексту, и по сырой дате (ММ-ДД), и по году
-    const results = PUSHKIN_EVENTS.filter(ev => 
-      ev.text.toLowerCase().includes(query) || 
-      ev.date.includes(query) || 
-      ev.year.toString().includes(query)
-    );
+    // Ищем по всему: заголовок, описание, год, дата, произведения
+    const results = PUSHKIN_EVENTS.filter(ev => {
+      const dateStr = formatDate(ev.month, ev.day).toLowerCase();
+      const worksStr = ev.works ? ev.works.join(' ').toLowerCase() : '';
+      return ev.title.toLowerCase().includes(query) || 
+             ev.description.toLowerCase().includes(query) || 
+             dateStr.includes(query) || 
+             ev.year.toString().includes(query) ||
+             worksStr.includes(query);
+    });
 
     if (results.length === 0) {
       resultsBox.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center;">Ничего не найдено. Попробуй другой запрос.</div>';
@@ -1263,9 +1280,13 @@ function renderCalendar(win){
 
     const displayResults = results.slice(0, 30);
     let html = displayResults.map(ev => `
-      <div style="font-size:12px; margin-bottom:8px; padding:10px; background:var(--input-bg); border-left:3px solid var(--titlebar-bg); border-radius:4px;">
-        <b style="color:var(--titlebar-bg);">${formatDate(ev.date)} (${ev.year} г.)</b><br>
-        ${ev.text}
+      <div style="font-size:12px; margin-bottom:10px; padding:10px; background:var(--input-bg); border-left:3px solid var(--titlebar-bg); border-radius:4px;">
+        <div style="font-family:'Courier New', monospace; font-size:11px; color:#7a2323; margin-bottom:2px;">
+          ${formatDate(ev.month, ev.day)} (${ev.year} г.)
+        </div>
+        <div style="font-weight:bold; font-size:13px; color:var(--titlebar-bg); margin-bottom:4px;">${ev.title}</div>
+        <div style="margin-bottom:6px; line-height:1.4;">${ev.description}</div>
+        ${ev.works && ev.works.length > 0 ? `<div style="color:#4a3b16; font-size:11px;"><b>📖</b> <i>${ev.works.join(', ')}</i></div>` : ''}
       </div>
     `).join('');
 
