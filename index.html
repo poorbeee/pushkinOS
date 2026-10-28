@@ -85,11 +85,11 @@
     background-position: 0 0, 0 0, 10px 10px;
     overflow: hidden; transition: background-image 0.5s ease; }
   
-  /* НОВАЯ СЕТКА ИКОНОК */
+  /* СЕТКА ИКОНОК */
   #icons { 
-    position: absolute; top: 0; left: 0; right: 0; bottom: 44px; /* Оставляем место под таскбар */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 44px; 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Автоматическая сетка */
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
     align-content: start; 
     gap: 15px; 
     padding: 20px; 
@@ -97,7 +97,6 @@
     overflow-y: auto; 
   }
   
-  /* Скрываем скроллбар для красоты, чтобы не портил вид */
   #icons::-webkit-scrollbar { display: none; }
   #icons { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -113,7 +112,6 @@
     transition: .2s; 
     user-select: none; 
     
-    /* Полупрозрачная подложка */
     background: var(--icon-bg); 
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -347,7 +345,7 @@
       grid-template-columns: repeat(3, 1fr); 
       gap: 10px; 
       padding: 0; 
-      max-height: 60vh; /* Чтобы не перекрывали весь экран */
+      max-height: 60vh; 
     }
     .icon { padding: 10px 4px; }
     .icon .glyph { font-size: 28px; margin-bottom: 4px;}
@@ -404,6 +402,9 @@
   
   <div id="startmenu"></div>
 </div>
+
+<!-- ПОДКЛЮЧАЕМ БАЗУ КАЛЕНДАРЯ -->
+<script src="calendar.js"></script>
 
 <script>
 // ЗАПРЕТ ПРАВОЙ КНОПКИ МЫШИ
@@ -513,41 +514,6 @@ function chooseProfile(){
       initIcons();
     });
   });
-}
-
-/* =========================================================
-   КАЛЕНДАРЬ ПУШКИНА
-   ========================================================= */
-const PUSHKIN_CALENDAR = [
-  { m: 1, d: 1, text: "1825 год. Пушкин в Михайловском. Начало работы над трагедией «Борис Годунов»." },
-  { m: 1, d: 29, text: "1837 год. Роковая дуэль на Чёрной речке. Поэт смертельно ранен." },
-  { m: 2, d: 8, text: "1837 год. Траурная церемония. Прах Пушкина перезахоронен в Святогорском монастыре." },
-  { m: 4, d: 6, text: "1830 год. Сватовство к Наталье Гончаровой. Получено согласие." },
-  { m: 5, d: 26, text: "1799 год. Рождение Александра Сергеевича Пушкина в Москве." },
-  { m: 6, d: 6, text: "1880 год. Открытие первого памятника Пушкину в Москве (в этот день)." },
-  { m: 8, d: 21, text: "1831 год. Венчание с Натальей Гончаровой в церкви Большого Вознесения." },
-  { m: 9, d: 1, text: "1826 год. Пушкин вызван в Москву на аудиенцию к Николаю I после ссылки." },
-  { m: 10, d: 19, text: "1811 год. Открытие Царскосельского лицея. Пушкин — среди первых воспитанников." },
-  { m: 10, d: 26, text: "1836 год. Пушкин заканчивает роман «Капитанская дочка»." },
-  { m: 11, d: 4, text: "1836 год. День рождения лицейского братства. Пушкин пишет стихотворение «Была пора...»." },
-  { m: 12, d: 14, text: "1825 год. Восстание декабристов на Сенатской площади. Пушкин в Михайловском." }
-];
-
-function getTodayEvent() {
-  const today = new Date();
-  const m = today.getMonth() + 1;
-  const d = today.getDate();
-  
-  const event = PUSHKIN_CALENDAR.find(e => e.m === m && e.d === d);
-  if (event) return event.text;
-  
-  const quotes = [
-    "«Что пройдёт, то будет мило»",
-    "«И жить торопится, и чувствовать спешит»",
-    "«Тьмы низких истин мне дороже нас возвышающий обман»",
-    "«Мы все учились понемногу чему-нибудь и как-нибудь»"
-  ];
-  return quotes[Math.floor(Math.random() * quotes.length)];
 }
 
 /* =========================================================
@@ -1216,19 +1182,92 @@ function renderApp(win, app){
 
 /* --- КАЛЕНДАРЬ --- */
 function renderCalendar(win){
-  const todayStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-  const event = getTodayEvent();
+  // Проверка, загрузился ли calendar.js
+  if (typeof PUSHKIN_EVENTS === 'undefined') {
+    win.innerHTML = `
+      <div class="titlebar"><span>📅 Пушкинский календарь</span><button class="close">×</button></div>
+      <div class="window-body">
+        <p style="color:red;">Ошибка: файл calendar.js не найден или не загружен.</p>
+      </div>`;
+    return;
+  }
+
+  const today = new Date();
+  const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayFormatted = today.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
   
+  const todayEvents = PUSHKIN_EVENTS.filter(e => e.date === todayStr);
+  
+  let todayHTML = '';
+  if (todayEvents.length > 0) {
+    todayHTML = todayEvents.map(e => 
+      `<div style="margin-bottom:10px;"><b>${e.year} год.</b> ${e.text}</div>`
+    ).join('');
+  } else {
+    const randomEv = PUSHKIN_EVENTS[Math.floor(Math.random() * PUSHKIN_EVENTS.length)];
+    todayHTML = `
+      <div style="font-size:12px; opacity:0.7; margin-bottom:10px;">На этот день в календаре пока нет записей. Но вот интересный факт из другого дня:</div>
+      <div><b>${randomEv.date} (${randomEv.year} г.)</b><br>${randomEv.text}</div>
+    `;
+  }
+
   win.innerHTML = `
     <div class="titlebar"><span>📅 Пушкинский календарь</span><button class="close">×</button></div>
     <div class="window-body">
       <div class="portrait"><img src="img/11.jpg" alt="Пушкин"></div>
-      <p style="text-align:center;font-weight:bold;font-size:16px;color:var(--titlebar-bg);margin-bottom:10px;">${todayStr}</p>
-      <div style="background:var(--input-bg); border:2px dashed var(--input-border); padding:15px; font-style:italic; line-height:1.6; font-size:14px;">
-        ${event}
+      
+      <p style="text-align:center;font-weight:bold;font-size:16px;color:var(--titlebar-bg);margin-bottom:10px;">
+        ${todayFormatted}
+      </p>
+      
+      <div style="background:var(--input-bg); border:2px dashed var(--input-border); padding:15px; line-height:1.6; font-size:14px; margin-bottom:20px;">
+        ${todayHTML}
       </div>
-      <p style="font-size:11px;opacity:0.6;margin-top:15px;text-align:center;">Основано на реальных событиях из жизни А.С. Пушкина</p>
+
+      <div class="question" style="margin-top:20px;">🔍 Поиск по книге событий</div>
+      <div class="input-row">
+        <input type="text" id="calSearch" placeholder="Введи год, дату (ММ-ДД) или слово...">
+      </div>
+      <div id="calResults" style="max-height: 200px; overflow-y: auto; border-top: 1px solid var(--input-border); padding-top: 10px;">
+        <div style="opacity:0.5; font-size:12px; text-align:center; margin-top:10px;">Введи хотя бы 2 символа для поиска по базе...</div>
+      </div>
     </div>`;
+
+  const searchInput = win.querySelector('#calSearch');
+  const resultsBox = win.querySelector('#calResults');
+
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    if (query.length < 2) {
+      resultsBox.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center; margin-top:10px;">Введи хотя бы 2 символа для поиска по базе...</div>';
+      return;
+    }
+
+    const results = PUSHKIN_EVENTS.filter(ev => 
+      ev.text.toLowerCase().includes(query) || 
+      ev.date.includes(query) || 
+      ev.year.toString().includes(query)
+    );
+
+    if (results.length === 0) {
+      resultsBox.innerHTML = '<div style="opacity:0.5; font-size:12px; text-align:center;">Ничего не найдено. Попробуй другой запрос.</div>';
+      return;
+    }
+
+    const displayResults = results.slice(0, 30);
+    let html = displayResults.map(ev => `
+      <div style="font-size:12px; margin-bottom:8px; padding:10px; background:var(--input-bg); border-left:3px solid var(--titlebar-bg); border-radius:4px;">
+        <b style="color:var(--titlebar-bg);">${ev.date} (${ev.year} г.)</b><br>
+        ${ev.text}
+      </div>
+    `).join('');
+
+    if (results.length > 30) {
+      html += `<div style="text-align:center; font-size:11px; opacity:0.6; padding:10px;">...и еще ${results.length - 30} совпадений. Уточни запрос.</div>`;
+    }
+
+    resultsBox.innerHTML = html;
+  });
 }
 
 /* --- БЛОКНОТ --- */
@@ -1273,7 +1312,7 @@ function renderAchievements(win){
     </div>`;
 }
 
-// ГЕНЕРАЦИЯ БИЛЕТА (Canvas)
+// ГЕНЕРАЦИЯ БИЛЕТА (Canvas) — С домиками филиалов
 window.generateTicket = function() {
   const canvas = document.createElement('canvas');
   canvas.width = 800;
@@ -1703,7 +1742,7 @@ function renderBall(win){
       }
       const btn = win.querySelector(`.ball-move[data-id="${sequence[i]}"]`);
       btn.classList.add('lit');
-      playClick();
+      // Звук клика УБРАН отсюда, чтобы не играл при показе последовательности
       
       setTimeout(() => {
         btn.classList.remove('lit');
@@ -1748,7 +1787,7 @@ function renderBall(win){
       const id = +btn.dataset.id;
       userInput.push(id);
       btn.classList.add('lit');
-      playClick();
+      playClick(); // Звук клика ТОЛЬКО когда нажимает игрок
       setTimeout(() => btn.classList.remove('lit'), 200);
 
       const i = userInput.length - 1;
