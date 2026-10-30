@@ -99,6 +99,7 @@
   
   #icons::-webkit-scrollbar { display: none; }
   #icons { -ms-overflow-style: none; scrollbar-width: none; }
+  #icons.hidden { display: none; }
 
   /* ИКОНКИ С ПОДЛОЖКОЙ */
   .icon { 
@@ -481,6 +482,7 @@ function playClick() {
    ========================================================= */
 let PROFILE = localStorage.getItem('pushkin_profile') || null;
 let CURRENT_WALLPAPER = localStorage.getItem('pushkin_wallpaper') || 'default';
+let SHOW_ICONS = localStorage.getItem('pushkin_icons') !== 'off';
 let zIndex = 10;
 let bootDismissed = false;
 
@@ -770,6 +772,16 @@ function initStartMenu(){
     menu.appendChild(mi);
   });
   
+  const iconsItem = document.createElement('div');
+  iconsItem.className = 'mi';
+  iconsItem.id = 'menuIconsToggle';
+  iconsItem.innerHTML = `<span>${SHOW_ICONS ? '🖥️' : '👁️'}</span><span>${SHOW_ICONS ? 'Скрыть значки' : 'Показать значки'}</span>`;
+  iconsItem.addEventListener('click', () => {
+    menu.classList.remove('open');
+    toggleDesktopIcons();
+  });
+  menu.appendChild(iconsItem);
+
   const prof = document.createElement('div');
   prof.className = 'mi';
   prof.innerHTML = `<span>👤</span><span>Сменить профиль</span>`;
@@ -1319,9 +1331,14 @@ function renderSettings(win){
   win.innerHTML = `
     <div class="titlebar"><span>⚙️ Настройки.exe — Персонализация</span><button class="close">×</button></div>
     <div class="window-body">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--input-border);">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--input-border);">
         <b>Тема интерфейса:</b>
         <button class="btn small" onclick="toggleTheme()">Переключить день/ночь</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--input-border);">
+        <span><b>Значки рабочего стола:</b><br><span style="font-size:11px;opacity:.7;">Спрячь иконки, чтобы полюбоваться обоями.</span></span>
+        <button class="btn small" onclick="toggleDesktopIcons()">${SHOW_ICONS ? 'Скрыть значки' : 'Показать значки'}</button>
       </div>
 
       <p>Выбери фон для рабочего стола. Обои открываются за достижения.</p>
@@ -1364,6 +1381,36 @@ window.toggleTheme = function() {
   const isLight = document.body.classList.contains('light-mode');
   localStorage.setItem('pushkin_theme', isLight ? 'light' : 'dark');
   playClick();
+};
+
+/* --- Значки рабочего стола: показать/скрыть (как в Windows) --- */
+function applyDesktopIcons(){
+  const box = document.getElementById('icons');
+  if (box) box.classList.toggle('hidden', !SHOW_ICONS);
+
+  const item = document.getElementById('menuIconsToggle');
+  if (item) {
+    const label = item.querySelector('span:last-child');
+    if (label) label.textContent = SHOW_ICONS ? 'Скрыть значки' : 'Показать значки';
+    const ic = item.querySelector('span:first-child');
+    if (ic) ic.textContent = SHOW_ICONS ? '🖥️' : '👁️';
+  }
+}
+
+window.toggleDesktopIcons = function(){
+  SHOW_ICONS = !SHOW_ICONS;
+  localStorage.setItem('pushkin_icons', SHOW_ICONS ? 'on' : 'off');
+  applyDesktopIcons();
+  playClick();
+  toast(
+    SHOW_ICONS ? '🖥️ Значки вернулись' : '🖼 Чистый рабочий стол',
+    SHOW_ICONS ? 'Иконки снова на месте.' : 'Вернуть их можно в «Настройках» или в меню «ПУШКИН.ОС».'
+  );
+  const settingsWin = document.querySelector('.window[data-id="settings"]');
+  if (settingsWin) {
+    settingsWin.querySelector('.close').click();
+    openWindow('settings');
+  }
 };
 
 window.setWallpaper = function(id){
@@ -2076,6 +2123,7 @@ initStartMenu();
 renderAchv();
 updateProgress();
 applyWallpaper();
+applyDesktopIcons();
 updateSoundIcon();
 
 if (localStorage.getItem('pushkin_theme') === 'light') {
