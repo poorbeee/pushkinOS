@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>ПУШКИН.ОС — Редактор заданий</title>
+<style>
+  :root {
+    --bg: #0d1710;
+    --panel: #1a3324;
+    --card: #e8e0cc;
+    --text: #2b2b2b;
+    --text-light: #e8e0cc;
+    --gold: #d1a352;
+    --green: #2c4a35;
+    --red: #7a2323;
+    --border: #8b7d5b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--text-light);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--panel);
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--gold);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 18px;
+    color: var(--gold);
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: var(--green);
+    color: var(--gold);
+    border: 2px solid;
+    border-color: #fff #000 #000 #fff;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 12px;
+    transition: filter .1s;
+  }
+  .btn:hover { filter: brightness(1.15); }
+  .btn:active { border-color: #000 #fff #fff #000; filter: brightness(.8); }
+  .btn.primary { background: var(--gold); color: var(--panel); }
+  .btn.danger { background: var(--red); color: #fff; }
+  .btn.small { padding: 4px 8px; font-size: 11px; }
+  .btn.icon-btn { padding: 4px 7px; font-size: 14px; }
+  .dirty-flag {
+    background: var(--red);
+    color: #fff;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    display: none;
+  }
+  .dirty-flag.on { display: inline-block; }
+
+  nav.tabs {
+    background: var(--panel);
+    padding: 0 20px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 60px;
+    z-index: 99;
+  }
+  nav.tabs button {
+    background: transparent;
+    color: var(--text-light);
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  nav.tabs button:hover { background: rgba(255,255,255,0.05); }
+  nav.tabs button.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  main {
+    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card {
+    background: var(--card);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px dashed var(--border);
+    flex-wrap: wrap;
+  }
+  .card-title {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--green);
+  }
+  .card-title .id {
+    font-size: 10px;
+    color: var(--border);
+    font-weight: normal;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 3px;
+  }
+
+  .field {
+    margin-bottom: 12px;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: var(--green);
+    margin-bottom: 4px;
+    letter-spacing: .5px;
+  }
+  .field input[type="text"],
+  .field input[type="number"],
+  .field textarea {
+    width: 100%;
+    padding: 7px 10px;
+    border: 2px solid var(--border);
+    background: #fffdf5;
+    color: var(--text);
+    font-family: Georgia, serif;
+    font-size: 13px;
+    border-radius: 2px;
+  }
+  .field input[type="text"]:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--green);
+    background: #fff;
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 60px;
+    line-height: 1.5;
+  }
+  .field .hint {
+    font-size: 11px;
+    color: var(--border);
+    margin-top: 3px;
+    font-style: italic;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .field-row.three {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .pairs-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 32px;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .pairs-header span {
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: var(--border);
+    text-transform: uppercase;
+  }
+  .pair-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 32px;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: center;
+  }
+  .pair-row input {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .option-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .option-row input[type="text"] {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .option-row input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--green);
+  }
+  .option-row .correct-label {
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    color: var(--border);
+    white-space: nowrap;
+  }
+
+  .task-editor {
+    background: rgba(0,0,0,0.05);
+    padding: 12px;
+    border-radius: 3px;
+    margin-top: 10px;
+    border-left: 4px solid var(--gold);
+  }
+  .task-editor h4 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    background: var(--panel);
+    border: 2px dashed var(--gold);
+    color: var(--text-light);
+    border-radius: 4px;
+  }
+  .empty-state h3 { color: var(--gold); }
+
+  dialog {
+    max-width: 90vw;
+    width: 800px;
+    padding: 20px;
+    border: 3px solid var(--gold);
+    background: var(--panel);
+    color: var(--text-light);
+    border-radius: 4px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.7); }
+  dialog textarea {
+    width: 100%;
+    height: 60vh;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: #0d1710;
+    color: #86a38e;
+    border: 2px solid var(--border);
+    padding: 12px;
+    border-radius: 2px;
+    line-height: 1.5;
+  }
+  dialog .dialog-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--panel);
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 13px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s, transform .3s;
+    z-index: 9999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  .info-bar {
+    background: rgba(209,163,82,0.1);
+    border-left: 4px solid var(--gold);
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    border-radius: 2px;
+  }
+  .info-bar b { color: var(--gold); }
+
+  @media (max-width: 700px) {
+    .field-row, .field-row.three { grid-template-columns: 1fr; }
+    .pair-row { grid-template-columns: 1fr 1fr 28px; }
+    header { padding: 10px; }
+    main { padding: 10px; }
+    .card { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ РЕДАКТОР ЗАДАНИЙ — ПУШКИН.ОС</h1>
+  <div class="toolbar">
+    <span class="dirty-flag" id="dirtyFlag">● Не сохранено</span>
+    <label class="btn">📂 Открыть tasks.js<input type="file" id="fileInput" accept=".js,.txt" hidden></label>
+    <button class="btn" id="reloadBtn" title="Забыть черновик и прочитать tasks.js из папки сайта">↻ Перечитать tasks.js</button>
+    <button class="btn" id="previewBtn">👁 Предпросмотр</button>
+    <button class="btn primary" id="downloadBtn">💾 Скачать tasks.js</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="files" class="active">📄 Файлы</button>
+  <button data-tab="branches">🏛️ Филиалы</button>
+  <button data-tab="tarot">🎴 Таро</button>
+  <button data-tab="cipher">🔐 Шифры</button>
+  <button data-tab="achv">🏆 Достижения</button>
+</nav>
+
+<main>
+  <div class="info-bar">
+    <b>Как пользоваться:</b> правьте поля, нажмите «Скачать tasks.js» — и замените файл рядом с index.html (на компьютере или в репозитории сайта). После этого изменения увидят все игроки. <b>Не меняйте поле «ID»</b> — по нему работает прогресс игроков.
+  </div>
+  <div class="info-bar" style="border-left-color:#8a6d1f;">
+    <b>Сайт на GitHub Pages?</b> Сохранить файл прямо со страницы нельзя: скачайте <code>tasks.js</code> и загрузите его в репозиторий (GitHub → <i>Add file</i> → <i>Upload files</i> → заменить <code>tasks.js</code>). Через минуту сайт обновится у всех. Черновик правок пока хранится только в этом браузере — кнопка «↻ Перечитать tasks.js» его сбрасывает.
+  </div>
+
+  <div id="app">
+    <div class="empty-state">
+      <h3>Загрузка...</h3>
+      <p>Открываю tasks.js рядом с редактором...</p>
+    </div>
+  </div>
+</main>
+
+<dialog id="previewDialog">
+  <h3 style="color: var(--gold); margin-top: 0;">📄 Готовый tasks.js</h3>
+  <p style="font-size: 12px; opacity: .8;">Скопируйте текст или нажмите «Скачать» в главном окне.</p>
+  <textarea id="previewArea" readonly></textarea>
+  <div class="dialog-actions">
+    <button class="btn" onclick="copyPreview()">📋 Копировать</button>
+    <button class="btn primary" onclick="this.closest('dialog').close()">Закрыть</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================================
+   СОСТОЯНИЕ РЕДАКТОРА
+   ========================================================================== */
+let DATA = null;
+let isDirty = false;
+let currentTab = 'files';
+const STORAGE_KEY = 'pushkin_admin_draft_v1';
+
+/* ==========================================================================
+   УТИЛИТЫ
+   ========================================================================== */
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function markDirty() {
+  isDirty = true;
+  document.getElementById('dirtyFlag').classList.add('on');
+  saveDraft();
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA));
+  } catch (e) { /* ignore quota */ }
+}
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ==========================================================================
+   ПАРСИНГ tasks.js
+   ========================================================================== */
+function parseTasksJS(text) {
+  // Убираем возможные комментарии и "const TASKS_CONFIG ="
+  const cleaned = text
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+    .replace(/^\s*const\s+TASKS_CONFIG\s*=\s*/, '')
+    .replace(/;\s*$/, '');
+  try {
+    // Безопасно: файл локальный и доверенный
+    return new Function('return (' + cleaned + ');')();
+  } catch (e) {
+    throw new Error('Не удалось разобрать файл: ' + e.message);
+  }
+}
+
+/* ==========================================================================
+   ЗАГРУЗКА
+   ========================================================================== */
+async function loadInitial() {
+  // 1) Черновик из localStorage
+  const draft = localStorage.getItem(STORAGE_KEY);
+  if (draft) {
+    try {
+      DATA = JSON.parse(draft);
+      renderAll();
+      toast('Загружен черновик из браузера');
+      return;
+    } catch (e) { /* fallthrough */ }
+  }
+  // 2) Из файла tasks.js рядом
+  try {
+    const res = await fetch('tasks.js', { cache: 'no-store' });
+    if (res.ok) {
+      const text = await res.text();
+      DATA = parseTasksJS(text);
+      renderAll();
+      return;
+    }
+  } catch (e) { /* fallthrough */ }
+  // 3) Не смогли — просим загрузить вручную
+  document.getElementById('app').innerHTML = `
+    <div class="empty-state">
+      <h3>Не удалось загрузить tasks.js автоматически</h3>
+      <p>Скорее всего, вы открыли admin.html не через веб-сервер. Нажмите кнопку <b>«📂 Открыть tasks.js»</b> вверху и выберите файл вручную.</p>
+      <p style="font-size:12px;opacity:.7;margin-top:20px;">Если файла нет — попросите его у администратора, либо откройте admin.html через локальный сервер (например, <code>python -m http.server</code>).</p>
+    </div>`;
+}
+
+/* ==========================================================================
+   РЕНДЕР
+   ========================================================================== */
+function renderAll() {
+  const app = document.getElementById('app');
+  if (!DATA) { app.innerHTML = '<div class="empty-state"><h3>Нет данных</h3></div>'; return; }
+
+  app.innerHTML = `
+    <div class="section ${currentTab==='files'?'active':''}" data-section="files"></div>
+    <div class="section ${currentTab==='branches'?'active':''}" data-section="branches"></div>
+    <div class="section ${currentTab==='tarot'?'active':''}" data-section="tarot"></div>
+    <div class="section ${currentTab==='cipher'?'active':''}" data-section="cipher"></div>
+    <div class="section ${currentTab==='achv'?'active':''}" data-section="achv"></div>
+  `;
+
+  renderFiles();
+  renderBranches();
+  renderTarot();
+  renderCipher();
+  renderAchv();
+}
+
+/* --- ФАЙЛЫ --- */
+function renderFiles() {
+  const sec = document.querySelector('[data-section="files"]');
+  sec.innerHTML = `
+    <div class="info-bar">
+      <b>⚠️ Важно:</b> файлов должно быть <b>6</b> — по этому числу открывается секретный архив. Не удаляйте и не добавляйте файлы — только редактируйте тексты. ID не трогайте.
+    </div>
+    ${DATA.files.map((f, i) => renderFileCard(f, i)).join('')}
+  `;
+  bindFileEvents();
+}
+
+function renderFileCard(f, i) {
+  const task = f.task;
+  return `
+    <div class="card" data-file-index="${i}">
+      <div class="card-head">
+        <div class="card-title">${escapeHtml(f.icon)} ${escapeHtml(f.name)} <span class="id">id: ${escapeHtml(f.id)}</span></div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Имя файла (видно на иконке)</label>
+          <input type="text" data-bind="name" value="${escapeHtml(f.name)}">
+        </div>
+        <div class="field">
+          <label>Иконка (эмодзи)</label>
+          <input type="text" data-bind="icon" value="${escapeHtml(f.icon)}" maxlength="4">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Статус при открытии</label>
+          <input type="text" data-bind="status" value="${escapeHtml(f.status)}">
+        </div>
+        <div class="field">
+          <label>Путь к портрету</label>
+          <input type="text" data-bind="portrait" value="${escapeHtml(f.portrait||'')}" placeholder="img/5.jpg">
+        </div>
+      </div>
+      <div class="field">
+        <label>Вступительный текст (перед заданием)</label>
+        <textarea data-bind="intro" rows="3">${escapeHtml(f.intro)}</textarea>
+      </div>
+      ${task ? `
+        <div class="field">
+          <label>Текст после успеха</label>
+          <textarea data-bind="success" rows="2">${escapeHtml(f.success||'')}</textarea>
+        </div>
+        <div class="task-editor" data-task-editor>
+          <h4>📝 Задание</h4>
+          <div class="field">
+            <label>Вопрос / инструкция</label>
+            <input type="text" data-task="question" value="${escapeHtml(task.question||'')}">
+          </div>
+          ${renderTaskBody(task)}
+        </div>
+      ` : `<div class="info-bar" style="margin-top:10px;">Этот файл — только для чтения, без задания.</div>`}
+    </div>
+  `;
+}
+
+/* Общий рендер тела задания (для файлов и филиалов) */
+let TASK_UID = 0;
+function renderTaskBody(task) {
+  if (task.type === 'quiz') {
+    // Своя группа радиокнопок на каждую карточку, иначе в разных заданиях
+    // выбор «правильного» варианта перескакивает между карточками.
+    const group = 'correct-' + (++TASK_UID);
+    return `
+      <div class="field">
+        <label>Варианты ответа. Отметьте радиокнопкой правильный.</label>
+        <div data-quiz-options>
+          ${task.options.map((opt, idx) => `
+            <div class="option-row">
+              <input type="radio" name="${group}" ${idx===task.correct?'checked':''} data-quiz-correct="${idx}">
+              <input type="text" data-quiz-option="${idx}" value="${escapeHtml(opt)}">
+              <button class="btn small danger" data-remove-option="${idx}" title="Удалить">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn small" data-add-option>+ Добавить вариант</button>
+      </div>
+    `;
+  }
+  if (task.type === 'match') {
+    return `
+      <div class="field">
+        <label>Пары «слева ↔ справа». Порядок правой колонки перемешивается автоматически.</label>
+        <div class="pairs-header"><span>Слева</span><span>Справа</span><span></span></div>
+        <div data-match-pairs>
+          ${task.pairs.map((p, idx) => `
+            <div class="pair-row">
+              <input type="text" data-pair-left="${idx}" value="${escapeHtml(p.left)}">
+              <input type="text" data-pair-right="${idx}" value="${escapeHtml(p.right)}">
+              <button class="btn small danger" data-remove-pair="${idx}">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn small" data-add-pair>+ Добавить пару</button>
+      </div>
+    `;
+  }
+  if (task.type === 'order') {
+    return `
+      <div class="field">
+        <label>Строки в ПРАВИЛЬНОМ порядке. Каждая новая строка = новый шаг. На сайте они перемешаются сами.</label>
+        <textarea data-order-lines rows="${Math.max(4, task.lines.length)}">${escapeHtml(task.lines.join('\n'))}</textarea>
+        <div class="hint">Сейчас шагов: ${task.lines.length}</div>
+      </div>
+    `;
+  }
+  return '';
+}
+
+function bindFileEvents() {
+  document.querySelectorAll('[data-section="files"] .card').forEach(card => {
+    const idx = +card.dataset.fileIndex;
+    const f = DATA.files[idx];
+
+    card.querySelectorAll('[data-bind]').forEach(input => {
+      input.addEventListener('input', () => {
+        f[input.dataset.bind] = input.value;
+        markDirty();
+        if (input.dataset.bind === 'name') {
+          card.querySelector('.card-title').innerHTML = `${escapeHtml(f.icon)} ${escapeHtml(f.name)} <span class="id">id: ${escapeHtml(f.id)}</span>`;
+        }
+        if (input.dataset.bind === 'icon') {
+          card.querySelector('.card-title').innerHTML = `${escapeHtml(f.icon)} ${escapeHtml(f.name)} <span class="id">id: ${escapeHtml(f.id)}</span>`;
+        }
+      });
+    });
+
+    const taskEditor = card.querySelector('[data-task-editor]');
+    if (taskEditor) {
+      bindTaskEvents(taskEditor, f.task, () => markDirty());
+    }
+  });
+}
+
+/* --- ФИЛИАЛЫ --- */
+function renderBranches() {
+  const sec = document.querySelector('[data-section="branches"]');
+  sec.innerHTML = `
+    <div class="info-bar">
+      <b>Про поле «Метка»:</b> это короткое имя узла на карте — например, «Фил. №1», «Библиотека», «Отдел», или пусто. Если оставить пустым — плашка не отобразится.
+    </div>
+    ${DATA.branches.map((b, i) => renderBranchCard(b, i)).join('')}
+    <button class="btn primary" id="addBranchBtn">+ Добавить библиотеку / отдел</button>
+  `;
+  document.getElementById('addBranchBtn').addEventListener('click', addBranch);
+  bindBranchEvents();
+}
+
+function renderBranchCard(b, i) {
+  return `
+    <div class="card" data-branch-index="${i}">
+      <div class="card-head">
+        <div class="card-title">${escapeHtml(b.emoji)} ${escapeHtml(b.name)} <span class="id">id: ${escapeHtml(b.id)}</span></div>
+        ${DATA.branches.length > 1 ? `<button class="btn small danger" data-remove-branch="${i}">🗑 Удалить узел</button>` : ''}
+      </div>
+      <div class="field-row three">
+        <div class="field">
+          <label>Метка (свободный текст)</label>
+          <input type="text" data-bind="num" value="${escapeHtml(b.num||'')}" placeholder="Фил. №1 / Отдел / …">
+        </div>
+        <div class="field">
+          <label>Эмодзи</label>
+          <input type="text" data-bind="emoji" value="${escapeHtml(b.emoji)}" maxlength="4">
+        </div>
+        <div class="field">
+          <label>Путь к изображению домика</label>
+          <input type="text" data-bind="house" value="${escapeHtml(b.house||'')}" placeholder="img/house_1.png">
+        </div>
+      </div>
+      <div class="field">
+        <label>Название</label>
+        <input type="text" data-bind="name" value="${escapeHtml(b.name)}">
+      </div>
+      <div class="field">
+        <label>Адрес</label>
+        <input type="text" data-bind="addr" value="${escapeHtml(b.addr)}">
+      </div>
+      <div class="field">
+        <label>Вступительный текст</label>
+        <textarea data-bind="intro" rows="3">${escapeHtml(b.intro)}</textarea>
+      </div>
+      <div class="field">
+        <label>Текст после успеха</label>
+        <textarea data-bind="success" rows="2">${escapeHtml(b.success||'')}</textarea>
+      </div>
+      <div class="task-editor" data-task-editor>
+        <h4>📝 Задание</h4>
+        <div class="field">
+          <label>Вопрос / инструкция</label>
+          <input type="text" data-task="question" value="${escapeHtml(b.task.question||'')}">
+        </div>
+        ${renderTaskBody(b.task)}
+      </div>
+    </div>
+  `;
+}
+
+function bindBranchEvents() {
+  document.querySelectorAll('[data-section="branches"] .card').forEach(card => {
+    const idx = +card.dataset.branchIndex;
+    const b = DATA.branches[idx];
+
+    card.querySelectorAll('[data-bind]').forEach(input => {
+      input.addEventListener('input', () => {
+        b[input.dataset.bind] = input.value;
+        markDirty();
+      });
+    });
+
+    const taskEditor = card.querySelector('[data-task-editor]');
+    if (taskEditor) bindTaskEvents(taskEditor, b.task, () => markDirty());
+
+    const rm = card.querySelector('[data-remove-branch]');
+    if (rm) rm.addEventListener('click', () => {
+      if (!confirm(`Удалить узел «${b.name}»?`)) return;
+      DATA.branches.splice(idx, 1);
+      markDirty();
+      renderBranches();
+    });
+  });
+}
+
+function addBranch() {
+  const id = 'b' + Date.now();
+  DATA.branches.push({
+    id,
+    num: '',
+    name: 'Новый узел',
+    addr: '',
+    emoji: '🏛️',
+    house: 'img/house_center.png',
+    intro: 'Вступительный текст.',
+    success: 'Готово!',
+    task: {
+      type: 'match',
+      question: 'Соотнеси…',
+      pairs: [
+        { left: 'Первое', right: 'Второе' },
+        { left: 'Третье', right: 'Четвёртое' }
+      ]
+    }
+  });
+  markDirty();
+  renderBranches();
+  toast('Добавлен новый узел. Заполните поля.');
+}
+
+/* --- ТАРО --- */
+function renderTarot() {
+  const sec = document.querySelector('[data-section="tarot"]');
+  sec.innerHTML = `
+    <div class="info-bar">
+      <b>Колода карт.</b> У каждой карты: имя, эмодзи-символ, тип (good/bad/neutral — влияет на текст финального толкования) и полное описание.
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎴 Карты</div></div>
+      ${DATA.tarot.map((c, i) => renderTarotCard(c, i)).join('')}
+      <button class="btn primary" id="addTarotBtn">+ Добавить карту</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📍 Позиции в раскладе</div></div>
+      <div class="field">
+        <label>По одной на строку. На сайте случайно выберутся 3 штуки.</label>
+        <textarea data-tarot-positions rows="${Math.max(3, DATA.tarotPositions.length)}">${escapeHtml(DATA.tarotPositions.join('\n'))}</textarea>
+      </div>
+    </div>
+  `;
+  bindTarotEvents();
+}
+
+function renderTarotCard(c, i) {
+  return `
+    <div class="card" style="box-shadow:none;border-style:dashed;margin-bottom:10px;" data-tarot-index="${i}">
+      <div class="card-head">
+        <div class="card-title">Карта №${i+1}</div>
+        ${DATA.tarot.length > 1 ? `<button class="btn small danger" data-remove-tarot="${i}">🗑</button>` : ''}
+      </div>
+      <div class="field-row three">
+        <div class="field">
+          <label>Имя</label>
+          <input type="text" data-tarot-field="n" value="${escapeHtml(c.n)}">
+        </div>
+        <div class="field">
+          <label>Эмодзи</label>
+          <input type="text" data-tarot-field="s" value="${escapeHtml(c.s)}" maxlength="4">
+        </div>
+        <div class="field">
+          <label>Тип</label>
+          <select data-tarot-field="type" style="width:100%;padding:7px;border:2px solid var(--border);background:#fffdf5;font-family:Georgia,serif;">
+            <option value="good" ${c.type==='good'?'selected':''}>good — благая</option>
+            <option value="neutral" ${c.type==='neutral'?'selected':''}>neutral — нейтральная</option>
+            <option value="bad" ${c.type==='bad'?'selected':''}>bad — предупреждение</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Толкование</label>
+        <textarea data-tarot-field="full" rows="2">${escapeHtml(c.full)}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+function bindTarotEvents() {
+  document.querySelectorAll('[data-tarot-index]').forEach(card => {
+    const idx = +card.dataset.tarotIndex;
+    const c = DATA.tarot[idx];
+    card.querySelectorAll('[data-tarot-field]').forEach(input => {
+      input.addEventListener('input', () => {
+        c[input.dataset.tarotField] = input.value;
+        markDirty();
+      });
+    });
+    const rm = card.querySelector('[data-remove-tarot]');
+    if (rm) rm.addEventListener('click', () => {
+      DATA.tarot.splice(idx, 1);
+      markDirty();
+      renderTarot();
+    });
+  });
+  const pos = document.querySelector('[data-tarot-positions]');
+  if (pos) pos.addEventListener('input', () => {
+    DATA.tarotPositions = pos.value.split('\n').map(s => s.trim()).filter(Boolean);
+    markDirty();
+  });
+  const addBtn = document.getElementById('addTarotBtn');
+  if (addBtn) addBtn.addEventListener('click', () => {
+    DATA.tarot.push({ n: 'Новая карта', s: '✦', type: 'neutral', full: 'Описание карты.' });
+    markDirty();
+    renderTarot();
+  });
+}
+
+/* --- ШИФРЫ --- */
+function renderCipher() {
+  const sec = document.querySelector('[data-section="cipher"]');
+  sec.innerHTML = `
+    <div class="info-bar">
+      <b>Шифры:</b> программа берёт случайную строку из «Пророчеств» и случайный ребус из «Эмодзи-ребусов». Чем больше строк — тем разнообразнее игра.
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📜 Пророчества (по одной строке)</div></div>
+      <div class="field">
+        <label>Каждая строка — отдельное предсказание.</label>
+        <textarea data-prophecies rows="${Math.max(6, DATA.prophecies.length)}">${escapeHtml(DATA.prophecies.join('\n'))}</textarea>
+        <div class="hint">Строк: ${DATA.prophecies.length}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎭 Эмодзи-ребусы</div></div>
+      <div class="field">
+        <label>Формат каждой строки: <code>эмодзи-загадка | правильный ответ</code></label>
+        <textarea data-emoji-riddles rows="${Math.max(6, DATA.emojiRiddles.length)}">${escapeHtml(DATA.emojiRiddles.map(r => r.q + ' | ' + r.a).join('\n'))}</textarea>
+        <div class="hint">Разделитель — символ <b>|</b> (прямая черта). Пробелы по краям не важны.</div>
+      </div>
+    </div>
+  `;
+  document.querySelector('[data-prophecies]').addEventListener('input', e => {
+    DATA.prophecies = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+    markDirty();
+  });
+  document.querySelector('[data-emoji-riddles]').addEventListener('input', e => {
+    DATA.emojiRiddles = e.target.value.split('\n').map(line => {
+      const [q, ...rest] = line.split('|');
+      return { q: (q||'').trim(), a: rest.join('|').trim() };
+    }).filter(r => r.q && r.a);
+    markDirty();
+  });
+}
+
+/* --- ДОСТИЖЕНИЯ --- */
+function renderAchv() {
+  const sec = document.querySelector('[data-section="achv"]');
+  sec.innerHTML = `
+    <div class="info-bar">
+      <b>Достижения:</b> иконки и подсказки. Внутренние ID (poet, dancer, …) не меняйте — они связаны с логикой.
+    </div>
+    ${Object.entries(DATA.achievements).map(([key, a]) => `
+      <div class="card" data-achv-key="${key}">
+        <div class="card-head">
+          <div class="card-title">${escapeHtml(a.icon)} ${escapeHtml(a.title)} <span class="id">id: ${escapeHtml(key)}</span></div>
+        </div>
+        <div class="field-row three">
+          <div class="field">
+            <label>Эмодзи</label>
+            <input type="text" data-achv-field="icon" value="${escapeHtml(a.icon)}" maxlength="4">
+          </div>
+          <div class="field">
+            <label>Название</label>
+            <input type="text" data-achv-field="title" value="${escapeHtml(a.title)}">
+          </div>
+          <div class="field">
+            <label>Подсказка (если не получено)</label>
+            <input type="text" data-achv-field="hint" value="${escapeHtml(a.hint)}">
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+  document.querySelectorAll('[data-achv-key]').forEach(card => {
+    const key = card.dataset.achvKey;
+    card.querySelectorAll('[data-achv-field]').forEach(input => {
+      input.addEventListener('input', () => {
+        DATA.achievements[key][input.dataset.achvField] = input.value;
+        markDirty();
+      });
+    });
+  });
+}
+
+/* --- ОБЩИЙ ОБРАБОТЧИК ЗАДАНИЙ --- */
+function bindTaskEvents(container, task, onChange) {
+  // Вопрос
+  const qInput = container.querySelector('[data-task="question"]');
+  if (qInput) qInput.addEventListener('input', () => { task.question = qInput.value; onChange(); });
+
+  // QUIZ
+  if (task.type === 'quiz') {
+    container.querySelectorAll('[data-quiz-option]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        task.options[+inp.dataset.quizOption] = inp.value;
+        onChange();
+      });
+    });
+    container.querySelectorAll('[data-quiz-correct]').forEach(r => {
+      r.addEventListener('change', () => {
+        if (r.checked) {
+          task.correct = +r.dataset.quizCorrect;
+          onChange();
+        }
+      });
+    });
+    container.querySelectorAll('[data-remove-option]').forEach(b => {
+      b.addEventListener('click', () => {
+        const i = +b.dataset.removeOption;
+        if (task.options.length <= 2) { toast('Нужно хотя бы 2 варианта'); return; }
+        task.options.splice(i, 1);
+        if (task.correct >= task.options.length) task.correct = 0;
+        onChange();
+        // Перерисовываем карточку
+        const card = container.closest('.card');
+        if (card && card.dataset.fileIndex !== undefined) {
+          const idx = +card.dataset.fileIndex;
+          card.outerHTML = renderFileCard(DATA.files[idx], idx);
+        } else if (card && card.dataset.branchIndex !== undefined) {
+          const idx = +card.dataset.branchIndex;
+          card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
+        }
+        bindFileEvents(); bindBranchEvents();
+      });
+    });
+    const addBtn = container.querySelector('[data-add-option]');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      task.options.push('Новый вариант');
+      onChange();
+      const card = container.closest('.card');
+      if (card && card.dataset.fileIndex !== undefined) {
+        const idx = +card.dataset.fileIndex;
+        card.outerHTML = renderFileCard(DATA.files[idx], idx);
+      } else if (card && card.dataset.branchIndex !== undefined) {
+        const idx = +card.dataset.branchIndex;
+        card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
+      }
+      bindFileEvents(); bindBranchEvents();
+    });
+  }
+
+  // MATCH
+  if (task.type === 'match') {
+    container.querySelectorAll('[data-pair-left]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        task.pairs[+inp.dataset.pairLeft].left = inp.value;
+        onChange();
+      });
+    });
+    container.querySelectorAll('[data-pair-right]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        task.pairs[+inp.dataset.pairRight].right = inp.value;
+        onChange();
+      });
+    });
+    container.querySelectorAll('[data-remove-pair]').forEach(b => {
+      b.addEventListener('click', () => {
+        const i = +b.dataset.removePair;
+        if (task.pairs.length <= 2) { toast('Нужно хотя бы 2 пары'); return; }
+        task.pairs.splice(i, 1);
+        onChange();
+        const card = container.closest('.card');
+        if (card && card.dataset.fileIndex !== undefined) {
+          const idx = +card.dataset.fileIndex;
+          card.outerHTML = renderFileCard(DATA.files[idx], idx);
+        } else if (card && card.dataset.branchIndex !== undefined) {
+          const idx = +card.dataset.branchIndex;
+          card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
+        }
+        bindFileEvents(); bindBranchEvents();
+      });
+    });
+    const addBtn = container.querySelector('[data-add-pair]');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      task.pairs.push({ left: 'Слева', right: 'Справа' });
+      onChange();
+      const card = container.closest('.card');
+      if (card && card.dataset.fileIndex !== undefined) {
+        const idx = +card.dataset.fileIndex;
+        card.outerHTML = renderFileCard(DATA.files[idx], idx);
+      } else if (card && card.dataset.branchIndex !== undefined) {
+        const idx = +card.dataset.branchIndex;
+        card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
+      }
+      bindFileEvents(); bindBranchEvents();
+    });
+  }
+
+  // ORDER
+  if (task.type === 'order') {
+    const ta = container.querySelector('[data-order-lines]');
+    if (ta) ta.addEventListener('input', () => {
+      task.lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+      onChange();
+    });
+  }
+}
+
+/* ==========================================================================
+   ГЕНЕРАЦИЯ tasks.js
+   ========================================================================== */
+function generateJS(data) {
+  // Внутренние поля (starting with _) не нужны в файле — убираем
+  const clean = JSON.parse(JSON.stringify(data));
+
+  const header = `// tasks.js — все тексты и задания ПУШКИН.ОС.
+// Файл сгенерирован визуальным редактором admin.html.
+// Сотрудники могут править его вручную, но проще — через admin.html.
+
+const TASKS_CONFIG = `;
+
+  // Красивый вывод: 2 пробела
+  const body = JSON.stringify(clean, null, 2);
+
+  return header + body + ';\n';
+}
+
+/* ==========================================================================
+   ЭКСПОРТ
+   ========================================================================== */
+function downloadTasksJS() {
+  if (!DATA) return;
+  const content = generateJS(DATA);
+  const blob = new Blob([content], { type: 'text/javascript;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tasks.js';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  isDirty = false;
+  document.getElementById('dirtyFlag').classList.remove('on');
+  toast('✅ tasks.js скачан — положите его к index.html');
+}
+
+function previewTasksJS() {
+  if (!DATA) return;
+  const dlg = document.getElementById('previewDialog');
+  document.getElementById('previewArea').value = generateJS(DATA);
+  dlg.showModal();
+}
+
+function copyPreview() {
+  const ta = document.getElementById('previewArea');
+  ta.select();
+  try { document.execCommand('copy'); toast('Скопировано в буфер'); }
+  catch (e) { toast('Не удалось скопировать'); }
+}
+
+/* ==========================================================================
+   ОБРАБОТЧИКИ UI
+   ========================================================================== */
+document.getElementById('downloadBtn').addEventListener('click', downloadTasksJS);
+document.getElementById('previewBtn').addEventListener('click', previewTasksJS);
+
+document.getElementById('reloadBtn').addEventListener('click', () => {
+  if (isDirty && !confirm('Несохранённые правки будут потеряны. Продолжить?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  isDirty = false;
+  document.getElementById('dirtyFlag').classList.remove('on');
+  DATA = null;
+  currentTab = 'files';
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === 'files'));
+  document.getElementById('app').innerHTML = '<div class="empty-state"><h3>Загрузка...</h3><p>Читаю tasks.js из папки сайта...</p></div>';
+  loadInitial();
+});
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    DATA = parseTasksJS(text);
+    isDirty = false;
+    document.getElementById('dirtyFlag').classList.remove('on');
+    localStorage.removeItem(STORAGE_KEY);
+    renderAll();
+    toast('Файл загружен. Правьте поля и скачайте обратно.');
+  } catch (err) {
+    toast('Ошибка: ' + err.message);
+    alert('Не удалось прочитать файл.\n\n' + err.message);
+  }
+});
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    document.querySelectorAll('.section').forEach(s => {
+      s.classList.toggle('active', s.dataset.section === currentTab);
+    });
+  });
+});
+
+// Предупреждение при закрытии
+window.addEventListener('beforeunload', (e) => {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// Старт
+loadInitial();
+</script>
+</body>
+</html>
