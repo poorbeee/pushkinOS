@@ -249,9 +249,38 @@
   .tcard-back .mn { font-size: 10px; line-height: 1.3; color: var(--text-main); padding: 0 6px; }
   .reading { margin-top: 16px; padding: 14px; background: var(--input-bg); border: 2px solid; border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); font-size: 13px; display: none; }
   .reading.show { display: block; }
-  .reading h4 { font-size: 14px; color: var(--titlebar-bg); margin: 10px 0 6px; }
-  .reading h4:first-child { margin-top: 0; }
-  .reading .total { margin-top: 12px; padding-top: 12px; border-top: 2px dashed var(--input-border); font-style: italic; color: var(--text-main); }
+  .reading .r-head { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--input-border); }
+  .reading .r-title { font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; letter-spacing: 1px; color: var(--titlebar-bg); }
+  .reading .r-q { margin-top: 6px; font-style: italic; font-size: 12px; }
+  .reading .r-spread-list { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .reading .r-spread-chip { font-size: 10px; font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border: 1px solid var(--input-border); color: #6b5a2a; }
+  .reading .r-card { border-left: 4px solid var(--input-border); padding: 8px 10px 7px; margin-bottom: 10px; background: rgba(0,0,0,0.03); }
+  .reading .r-card.tone-good { border-left-color: #2c4a35; }
+  .reading .r-card.tone-bad { border-left-color: #7a2323; }
+  .reading .r-card.tone-neutral { border-left-color: #8b7d5b; }
+  .reading .r-pos { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    font-weight: bold; color: #7a2323; }
+  .reading .r-pos .r-role { text-transform: none; letter-spacing: 0; font-weight: normal; font-style: italic; opacity: .75; }
+  .reading .r-name { display: flex; align-items: center; gap: 7px; font-size: 15px; font-weight: bold;
+    color: var(--titlebar-bg); margin-top: 4px; }
+  .reading .r-sym { font-size: 19px; }
+  .reading .r-tag { font-size: 9px; font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 6px; color: #fff; background: #8b7d5b; }
+  .reading .r-tag.good { background: #2c4a35; }
+  .reading .r-tag.bad { background: #7a2323; }
+  .reading .r-full { margin: 6px 0 4px; line-height: 1.5; }
+  .reading .r-insight { margin: 0; font-size: 12px; font-style: italic; color: #4a3b16; line-height: 1.45; }
+  .reading .r-sum { margin-top: 12px; padding-top: 12px; border-top: 2px dashed var(--input-border); }
+  .reading .r-balance { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .reading .r-chip { font-size: 10px; font-family: 'Courier New', monospace; padding: 3px 8px; border: 1px solid #8b7d5b; color: #6b5a2a; }
+  .reading .r-chip.good { color: #2c4a35; border-color: #2c4a35; }
+  .reading .r-chip.bad { color: #7a2323; border-color: #7a2323; }
+  .reading .r-line { margin: 0 0 9px; line-height: 1.55; }
+  .reading .r-line b { color: var(--titlebar-bg); }
+  .reading .r-thread { font-style: italic; color: #4a3b16; }
+  .reading .r-answer { border-left: 3px solid var(--titlebar-bg); padding-left: 9px; }
+  .tarot-progress { text-align: center; font-family: 'Courier New', monospace; font-size: 11px; opacity: .7; margin-top: 4px; }
 
   /* БАЛ */
   .ball-stage { background: var(--titlebar-bg); border: 2px solid; border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark); padding: 16px; text-align: center; margin-bottom: 16px; }
@@ -262,6 +291,7 @@
   .ball-move:active:not(:disabled) { border-color: var(--input-border) var(--border-light) var(--border-light) var(--input-border); }
   .ball-move:disabled { opacity: .5; cursor: default; }
   .ball-move.lit { background: var(--titlebar-text); color: var(--titlebar-bg); border-color: var(--border-light) var(--input-border) var(--input-border) var(--border-light); box-shadow: inset 0 0 15px rgba(255,255,255,0.5); }
+  .ball-move.miss { background: #e6c1c1; color: #4a0e0e; border-color: #7a2323; animation: shake .3s; }
   .ball-move .ic { font-size: 24px; }
 
   /* ШИФР */
@@ -487,6 +517,7 @@ function dismissBoot() {
 }
 
 function chooseProfile(){
+  if (document.querySelector('.window[data-id="profile"]')) return; // уже открыт
   const win = document.createElement('div');
   win.className = 'window';
   win.dataset.id = 'profile';
@@ -513,6 +544,8 @@ function chooseProfile(){
       PROFILE = c.dataset.profile;
       localStorage.setItem('pushkin_profile', PROFILE);
       win.remove();
+      const pi = document.querySelector('.window[data-id="readme"] #readme-profile-info');
+      if (pi) pi.innerHTML = `Выбран профиль: <b>${PROFILE === 'intern' ? '🎓 Стажёр' : '🗝️ Хранитель'}</b>. Сменить можно в меню «ПУШКИН.ОС».`;
       toast('👤 Профиль выбран', PROFILE === 'intern' ? 'Стажёр' : 'Хранитель');
       initIcons();
     });
@@ -737,11 +770,21 @@ function initStartMenu(){
     menu.appendChild(mi);
   });
   
+  const prof = document.createElement('div');
+  prof.className = 'mi';
+  prof.innerHTML = `<span>👤</span><span>Сменить профиль</span>`;
+  prof.style.borderTop = '1px solid #8b7d5b';
+  prof.style.marginTop = '6px';
+  prof.addEventListener('click', () => {
+    playClick();
+    menu.classList.remove('open');
+    chooseProfile();
+  });
+  menu.appendChild(prof);
+
   const reset = document.createElement('div');
   reset.className = 'mi';
   reset.innerHTML = `<span>🔄</span><span>Сбросить прогресс</span>`;
-  reset.style.borderTop = '1px solid #8b7d5b';
-  reset.style.marginTop = '6px';
   reset.addEventListener('click', () => {
     if(confirm('Точно сбросить весь прогресс?')){
       localStorage.clear();
@@ -1457,6 +1500,78 @@ function branchSolved(b, win, parentWin){
   updateProgress();
 }
 
+/* =========================================================
+   ТАРО: смыслы позиций и тона карт
+   ========================================================= */
+const TAROT_TONE = {
+  good:    { label: 'свет',       icon: '✨' },
+  bad:     { label: 'тень',       icon: '⚠️' },
+  neutral: { label: 'равновесие', icon: '⚖️' }
+};
+
+const TAROT_POSITION_GUIDE = {
+  past:    { icon: '⏳', role: 'что привело тебя сюда' },
+  present: { icon: '🕯️', role: 'где ты сейчас' },
+  future:  { icon: '🌅', role: 'куда всё идёт' },
+  advice:  { icon: '🧭', role: 'что стоит сделать' },
+  hidden:  { icon: '🔮', role: 'что пока скрыто' },
+  other:   { icon: '✦',  role: 'голос расклада' }
+};
+
+function tarotPosKey(name){
+  const n = String(name || '').toLowerCase();
+  if (n.includes('прошл')) return 'past';
+  if (n.includes('настоящ') || n.includes('сейчас')) return 'present';
+  if (n.includes('будущ')) return 'future';
+  if (n.includes('совет')) return 'advice';
+  if (n.includes('тайн') || n.includes('скрыт')) return 'hidden';
+  return 'other';
+}
+
+function tarotPosGuide(name){
+  const key = tarotPosKey(name);
+  return { key, ...TAROT_POSITION_GUIDE[key] };
+}
+
+// Смысл карты в конкретной позиции: тип карты + роль позиции
+function tarotInsight(name, type){
+  const key = tarotPosKey(name);
+  const tone = (type === 'good' || type === 'bad') ? type : 'neutral';
+  const table = {
+    past: {
+      good: 'Это осталось в прошлом — и осталось опорой. Опирайся на этот опыт.',
+      bad: 'Это уже позади, но всё ещё тянет назад. Пока не отпустишь — дорога будет тяжелее.',
+      neutral: 'Прошлое здесь ни помощник, ни помеха. Страница прочитана — идём дальше.'
+    },
+    present: {
+      good: 'Сейчас ты на верном пути: то, что ты делаешь, работает.',
+      bad: 'Сейчас непростое место. Карта просит не решать в тревоге и не спешить.',
+      neutral: 'Сейчас — полоса перемен. Всё зависит от того, какой шаг ты выберешь.'
+    },
+    future: {
+      good: 'Будущее обещает поддержку: то, к чему ты идёшь, может сложиться.',
+      bad: 'Будущее предупреждает: если оставить как есть — будет больно. Курс стоит менять.',
+      neutral: 'Будущее ещё не решено. Оно покажет то, что ты в него вложишь.'
+    },
+    advice: {
+      good: 'Делай так, как подсказывает эта карта: она на твоей стороне.',
+      bad: 'Не поступай как герой этой карты — здесь спрятана ошибка, которую можно не повторять.',
+      neutral: 'Держи равновесие: не спеши ни соглашаться, ни отказываться.'
+    },
+    hidden: {
+      good: 'Скрытая поддержка уже рядом — просто ты её не замечаешь.',
+      bad: 'Тайное важнее явного: то, чего ты не видишь, может решить дело.',
+      neutral: 'В тени — не ответ, а вопрос. Присмотрись к тому, о чём молчишь.'
+    },
+    other: {
+      good: 'Голос расклада здесь доброжелателен: у тебя есть поддержка.',
+      bad: 'Голос расклада предупреждает: в этом месте стоит быть осторожнее.',
+      neutral: 'Расклад говорит о переменах: всё решит твой выбор.'
+    }
+  };
+  return table[key][tone];
+}
+
 /* --- ТАРО --- */
 function renderTarot(win){
   if (!TAROT.length) {
@@ -1474,7 +1589,8 @@ function renderTarot(win){
   const pool = [...TAROT];
   for(let i=0; i<TAROT_SPREAD; i++){
     const idx = Math.floor(Math.random() * pool.length);
-    spread.push({...pool[idx], pos: positions[i]});
+    const pos = positions[i];
+    spread.push({...pool[idx], pos, posIdx: TAROT_POSITIONS.indexOf(pos)});
     pool.splice(idx, 1);
   }
 
@@ -1494,7 +1610,7 @@ function renderTarot(win){
           <div class="tcard" data-i="${i}">
             <div class="tcard-inner">
               <div class="tcard-face tcard-front">
-                <div class="sym">✦</div>
+                <div class="sym">${tarotPosGuide(c.pos).icon}</div>
                 <div>ПУШКИН.ОС</div>
                 <div class="pos">${c.pos}</div>
               </div>
@@ -1505,16 +1621,19 @@ function renderTarot(win){
             </div>
           </div>`).join('')}
       </div>
+      <div class="tarot-progress" id="tarotProgress">Открыто 0 из ${TAROT_SPREAD}</div>
       <div class="reading" id="reading"></div>
       ${PROFILE === 'intern' ? `<button class="btn btn-hint" id="tarotHint" style="display:block; margin-top:10px;">💡 Подсказка Стажёра</button>` : ''}
     </div>`;
 
   let flipped = 0;
+  const progress = win.querySelector('#tarotProgress');
   win.querySelectorAll('.tcard').forEach(card => {
     card.addEventListener('click', () => {
       if (card.classList.contains('flipped')) return;
       playClick();
       card.classList.add('flipped'); flipped++;
+      if (progress) progress.textContent = `Открыто ${flipped} из ${TAROT_SPREAD}`;
       if (flipped === TAROT_SPREAD) setTimeout(() => showTarotReading(win, spread, win.querySelector('#tarotQ').value), 700);
     });
   });
@@ -1522,7 +1641,10 @@ function renderTarot(win){
   const hintBtn = win.querySelector('#tarotHint');
   if (hintBtn) {
     hintBtn.addEventListener('click', () => {
-      toast('💡 Подсказка', `Карта Настоящего: ${(spread[1] || spread[0]).n}. Обрати внимание на её смысл.`);
+      const focus = spread.find(c => tarotPosKey(c.pos) === 'present')
+        || [...spread].sort((a, b) => a.posIdx - b.posIdx)[Math.floor((spread.length - 1) / 2)]
+        || spread[0];
+      toast('💡 Подсказка', `Позиция «${focus.pos}»: карта «${focus.n}». Подумай, как её смысл отвечает на твой вопрос.`);
       hintBtn.disabled = true;
     });
   }
@@ -1530,37 +1652,103 @@ function renderTarot(win){
 
 function showTarotReading(win, spread, question){
   const r = win.querySelector('#reading');
-  let html = '';
-  if(question.trim()){
-    html += `<div style="margin-bottom:10px;font-weight:bold;color:var(--titlebar-bg);padding-bottom:8px;border-bottom:1px solid var(--input-border);">Твой вопрос: «${question.trim()}»</div>`;
-  }
-  html += '<b style="color:var(--titlebar-bg);font-size:14px;font-family:Courier New;">📖 Толкование</b>';
-  
-  let badCount = 0; let goodCount = 0;
-  spread.forEach(c => {
-    if (c.type === 'bad') badCount++;
-    if (c.type === 'good') goodCount++;
-    html += `<h4>${c.pos} — ${c.s} ${c.n}</h4>
-      <div style="font-size:13px;color:var(--text-main);margin-bottom:10px;">${c.full}</div>`;
-  });
+  if (!r || !spread.length) return;
 
-  const presentCard = spread[1] || spread[0];
-  let synthesis = '';
-  if (presentCard.type === 'bad') {
-    synthesis = `⚠️ <b>Судьба предупреждает:</b> Карта «${presentCard.n}» в настоящем говорит, что сейчас не время для резких решений. ${presentCard.full}`;
-  } else if (presentCard.type === 'good') {
-    synthesis = `✨ <b>Судьба благоволит:</b> Карта «${presentCard.n}» в настоящем подсказывает, что ты на верном пути. ${presentCard.full}`;
+  // Читаем карты по порядку позиций: прошлое → настоящее → будущее → совет → тайное
+  const ordered = [...spread].sort((a, b) => a.posIdx - b.posIdx);
+  const counts = { good: 0, bad: 0, neutral: 0 };
+  ordered.forEach(c => { counts[(c.type === 'good' || c.type === 'bad') ? c.type : 'neutral']++; });
+
+  const present = ordered.find(c => tarotPosKey(c.pos) === 'present');
+  const advice = ordered.find(c => tarotPosKey(c.pos) === 'advice');
+  const past = ordered.find(c => tarotPosKey(c.pos) === 'past');
+  const future = ordered.find(c => tarotPosKey(c.pos) === 'future');
+  const main = present || ordered[Math.floor((ordered.length - 1) / 2)] || ordered[0];
+
+  const q = String(question || '').trim();
+  const mainHint = main.type === 'bad' ? 'здесь спрятано предупреждение'
+    : main.type === 'good' ? 'здесь твоя опора'
+    : 'здесь точка выбора';
+
+  const head = `
+    <div class="r-head">
+      <div class="r-title">📖 Толкование</div>
+      ${q ? `<div class="r-q">Твой вопрос: «${q}»</div>` : ''}
+      <div class="r-spread-list">${ordered.map(c => {
+        const g = tarotPosGuide(c.pos);
+        return `<span class="r-spread-chip">${g.icon} ${c.pos}</span>`;
+      }).join('')}</div>
+    </div>`;
+
+  const cards = ordered.map(c => {
+    const g = tarotPosGuide(c.pos);
+    const tone = (c.type === 'good' || c.type === 'bad') ? c.type : 'neutral';
+    return `
+      <div class="r-card tone-${tone}">
+        <div class="r-pos">${g.icon} ${c.pos} <span class="r-role">— ${g.role}</span></div>
+        <div class="r-name"><span class="r-sym">${c.s}</span>${c.n}<span class="r-tag ${tone}">${TAROT_TONE[tone].label}</span></div>
+        <p class="r-full">${c.full}</p>
+        <p class="r-insight">${tarotInsight(c.pos, c.type)}</p>
+      </div>`;
+  }).join('');
+
+  let thread = '';
+  if (past && future) {
+    if (past.type === 'bad' && future.type !== 'bad') thread = 'то, что было тяжёлым, не приговор: дальше становится светлее.';
+    else if (past.type !== 'bad' && future.type === 'bad') thread = 'то, что было опорой, может стать ловушкой, если ничего не менять.';
+    else if (past.type === 'good' && future.type === 'good') thread = 'расклад ровный и добрый: ни провалов, ни рывков.';
+    else thread = 'прошлое и будущее уравновешивают друг друга — выбор остаётся за тобой.';
+  }
+
+  const mainLine = present
+    ? `<b>Сейчас:</b> карта «${present.n}» в позиции «${present.pos}» — ${mainHint}.`
+    : `<b>Главная карта:</b> «${main.n}» (позиция «${main.pos}») — ${mainHint}.`;
+
+  let adviceLine;
+  if (advice) {
+    adviceLine = `<b>Совет:</b> «${advice.n}» — ${advice.full}`;
+  } else if (counts.bad > counts.good) {
+    adviceLine = '<b>Совет:</b> расклад больше предупреждает, чем обещает. Сбавь скорость и не решай сгоряча.';
+  } else if (counts.good > counts.bad) {
+    adviceLine = '<b>Совет:</b> расклад на твоей стороне — можно двигаться смелее, чем ты думаешь.';
   } else {
-    synthesis = `⚖️ <b>Равновесие:</b> Карта «${presentCard.n}» говорит о полосе перемен. Всё зависит от твоего выбора. ${presentCard.full}`;
+    adviceLine = '<b>Совет:</b> расклад держит равновесие. Держи и ты: не бросайся в крайности.';
   }
 
-  if (question.trim()) {
-    synthesis += `<br><br>💡 <b>К твоему вопросу:</b> Карта «${presentCard.n}» напрямую отвечает на него.`;
-  }
+  const chips = [
+    counts.good ? `<span class="r-chip good">✨ свет: ${counts.good}</span>` : '',
+    counts.bad ? `<span class="r-chip bad">⚠️ тень: ${counts.bad}</span>` : '',
+    counts.neutral ? `<span class="r-chip neutral">⚖️ равновесие: ${counts.neutral}</span>` : ''
+  ].join('');
 
-  html += `<div class="total">${synthesis}</div>`;
-  r.innerHTML = html;
+  const qLine = q
+    ? `<p class="r-line r-answer"><b>К твоему вопросу:</b> «${main.n}» отвечает прямо — ${
+        main.type === 'bad' ? 'не сейчас, ищи другой ход'
+        : main.type === 'good' ? 'да, двигайся в эту сторону'
+        : 'всё зависит от того, что выберешь'
+      }.</p>`
+    : '';
+
+  r.innerHTML = `${head}
+    <div class="r-cards">${cards}</div>
+    <div class="r-sum">
+      <div class="r-balance">${chips}</div>
+      ${thread ? `<p class="r-line r-thread">🧵 <b>Нить расклада:</b> ${thread}</p>` : ''}
+      <p class="r-line">${mainLine}</p>
+      <p class="r-line">${adviceLine}</p>
+      ${qLine}
+      <button class="btn" id="newSpread" style="display:block;width:100%;margin-top:14px;">🔄 Новый расклад</button>
+    </div>`;
   r.classList.add('show');
+
+  const again = r.querySelector('#newSpread');
+  if (again) again.addEventListener('click', () => {
+    playClick();
+    const keepQ = win.querySelector('#tarotQ') ? win.querySelector('#tarotQ').value : '';
+    renderTarot(win);
+    const qi = win.querySelector('#tarotQ');
+    if (qi) qi.value = keepQ;
+  });
 
   if (!doneApps.has('tarot')) { doneApps.add('tarot'); saveState(); unlock('oracle'); updateProgress(); }
 }
@@ -1582,6 +1770,11 @@ function renderBall(win){
       <div class="portrait"><img src="img/2.jpg" alt="Бал"></div>
       <p style="font-size:13px;color:var(--text-main);font-style:italic;text-align:center;">
         «Вот бал: весь в огнях...». Повтори движение. С каждым уровнем музыка играет быстрее!
+      </p>
+      <p style="font-size:11px;color:var(--titlebar-bg);text-align:center;margin-top:-6px;">
+        ${PROFILE === 'keeper'
+          ? '🗝️ Хранитель: одна ошибка — и танец начинается заново.'
+          : '🎓 Стажёр: ошибки не сбрасывают прогресс — уровень можно повторить.'}
       </p>
       <div class="ball-stage">
         <div class="ball-round" id="ballRound">УРОВЕНЬ 1 / ${maxLevel}</div>
@@ -1652,10 +1845,23 @@ function renderBall(win){
     const box = document.createElement('div');
     box.className = 'success-box';
     box.style.background = '#e6c1c1'; box.style.borderColor = '#7a2323'; box.style.color = '#4a0e0e';
-    box.innerHTML = `<b>✗ СБИЛСЯ С РИТМА</b>Попробуй ещё раз!`;
+    box.innerHTML = `<b>✗ СБИЛСЯ С РИТМА</b>Хранитель не прощает ошибок: танец начинается заново.`;
     win.querySelector('.window-body').appendChild(box);
     buttons.forEach(b => b.disabled = true);
     statusEl.textContent = 'Конец танца.';
+
+    const again = document.createElement('button');
+    again.className = 'btn';
+    again.style.cssText = 'display:block;width:100%;margin-top:10px;';
+    again.textContent = '🔄 Начать заново';
+    again.addEventListener('click', () => {
+      playClick();
+      box.remove();
+      level = 1; sequence = []; userInput = [];
+      statusEl.textContent = 'Смотри...';
+      startRound();
+    });
+    box.appendChild(again);
   }
 
   buttons.forEach(btn => {
@@ -1670,7 +1876,18 @@ function renderBall(win){
       const i = userInput.length - 1;
       if (userInput[i] !== sequence[i]) {
         accepting = false; buttons.forEach(b => b.disabled = true);
-        setTimeout(finishLose, 500); return;
+        btn.classList.add('miss');
+        setTimeout(() => btn.classList.remove('miss'), 400);
+
+        if (PROFILE === 'keeper') {
+          // Хранитель: ошибка сбрасывает прогресс
+          setTimeout(finishLose, 500);
+        } else {
+          // Стажёр: прогресс не сбрасываем — повторяем тот же уровень
+          statusEl.textContent = 'Не то… Смотри ещё раз!';
+          setTimeout(() => { if (win.isConnected) playSequence(); }, 1200);
+        }
+        return;
       }
       if (userInput.length === sequence.length) {
         accepting = false;
