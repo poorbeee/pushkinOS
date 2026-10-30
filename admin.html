@@ -161,7 +161,8 @@
   }
   .field input[type="text"],
   .field input[type="number"],
-  .field textarea {
+  .field textarea,
+  .field select {
     width: 100%;
     padding: 7px 10px;
     border: 2px solid var(--border);
@@ -171,8 +172,15 @@
     font-size: 13px;
     border-radius: 2px;
   }
+  .field select {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+  }
   .field input[type="text"]:focus,
-  .field textarea:focus {
+  .field textarea:focus,
+  .field select:focus {
     outline: none;
     border-color: var(--green);
     background: #fff;
@@ -366,7 +374,7 @@
 
 <main>
   <div class="info-bar">
-    <b>Как пользоваться:</b> правьте поля, нажмите «Скачать tasks.js» — и замените файл рядом с index.html (на компьютере или в репозитории сайта). После этого изменения увидят все игроки. <b>Не меняйте поле «ID»</b> — по нему работает прогресс игроков.
+    <b>Как пользоваться:</b> правьте поля, нажмите «Скачать tasks.js» — и замените файл рядом с index.html (на компьютере или в репозитории сайта). После этого изменения увидят все игроки. <b>Механику задания можно менять</b> — у каждого файла и филиала есть поле «Тип задания» (тест / сопоставление / порядок). <b>Не меняйте поле «ID»</b> — по нему работает прогресс игроков.
   </div>
   <div class="info-bar" style="border-left-color:#8a6d1f;">
     <b>Сайт на GitHub Pages?</b> Сохранить файл прямо со страницы нельзя: скачайте <code>tasks.js</code> и загрузите его в репозиторий (GitHub → <i>Add file</i> → <i>Upload files</i> → заменить <code>tasks.js</code>). Через минуту сайт обновится у всех. Черновик правок пока хранится только в этом браузере — кнопка «↻ Перечитать tasks.js» его сбрасывает.
@@ -551,17 +559,72 @@ function renderFileCard(f, i) {
           <label>Текст после успеха</label>
           <textarea data-bind="success" rows="2">${escapeHtml(f.success||'')}</textarea>
         </div>
-        <div class="task-editor" data-task-editor>
-          <h4>📝 Задание</h4>
-          <div class="field">
-            <label>Вопрос / инструкция</label>
-            <input type="text" data-task="question" value="${escapeHtml(task.question||'')}">
-          </div>
-          ${renderTaskBody(task)}
-        </div>
+        ${renderTaskEditor(task)}
       ` : `<div class="info-bar" style="margin-top:10px;">Этот файл — только для чтения, без задания.</div>`}
     </div>
   `;
+}
+
+/* Общий рендер редактора задания: выбор типа + вопрос + тело (файлы и филиалы) */
+const TASK_TYPES = {
+  quiz:  'Тест — выбрать один правильный ответ',
+  match: 'Сопоставление — соединить пары',
+  order: 'Порядок — расставить шаги'
+};
+const TASK_TYPE_NAMES = { quiz: 'тест', match: 'сопоставление', order: 'порядок' };
+
+function renderTaskEditor(task) {
+  return `
+    <div class="task-editor" data-task-editor>
+      <h4>📝 Задание</h4>
+      <div class="field">
+        <label>Тип задания</label>
+        <select data-task-type>
+          ${Object.entries(TASK_TYPES).map(([value, label]) =>
+            `<option value="${value}" ${task.type === value ? 'selected' : ''}>${label}</option>`
+          ).join('')}
+        </select>
+        <div class="hint">
+          Тип можно менять: вопрос сохранится, а варианты/пары/шаги будут пересобраны из текущих текстов — их нужно проверить.
+        </div>
+      </div>
+      <div class="field">
+        <label>Вопрос / инструкция</label>
+        <input type="text" data-task="question" value="${escapeHtml(task.question||'')}">
+      </div>
+      ${renderTaskBody(task)}
+    </div>`;
+}
+
+/* Пересборка задания при смене типа — по возможности сохраняем тексты.
+   Берём «левую» (вопросительную) сторону старого задания: так новый тип
+   остаётся осмысленным, а сотруднику нужно только дописать вторую часть. */
+function convertTaskType(task, newType) {
+  const question = task.question || '';
+  let texts;
+  if (task.type === 'match') texts = (task.pairs || []).map(p => p.left);
+  else if (task.type === 'order') texts = (task.lines || []).slice();
+  else texts = (task.options || []).slice();
+
+  if (newType === 'quiz') {
+    const options = texts.slice(0, 6);
+    while (options.length < 2) options.push('Вариант ' + (options.length + 1));
+    return { type: 'quiz', question, options, correct: 0 };
+  }
+  if (newType === 'order') {
+    const lines = texts.slice(0, 8);
+    while (lines.length < 2) lines.push('Шаг ' + (lines.length + 1));
+    return { type: 'order', question, lines };
+  }
+  // match
+  let pairs;
+  if (task.type === 'match') {
+    pairs = (task.pairs || []).map(p => ({ left: p.left, right: p.right }));
+  } else {
+    pairs = texts.map(t => ({ left: t, right: '…' }));
+  }
+  while (pairs.length < 2) pairs.push({ left: 'Слева ' + (pairs.length + 1), right: 'Справа ' + (pairs.length + 1) });
+  return { type: 'match', question, pairs };
 }
 
 /* Общий рендер тела задания (для файлов и филиалов) */
@@ -617,8 +680,43 @@ function renderTaskBody(task) {
   return '';
 }
 
+// Перерисовать одну карточку и заново навесить обработчики только на неё
+function rerenderCard(card) {
+  if (card.dataset.fileIndex !== undefined) {
+    const idx = +card.dataset.fileIndex;
+    card.outerHTML = renderFileCard(DATA.files[idx], idx);
+  } else if (card.dataset.branchIndex !== undefined) {
+    const idx = +card.dataset.branchIndex;
+    card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
+  }
+  bindFileEvents();
+  bindBranchEvents();
+}
+
+// Смена типа задания: спрашиваем подтверждение и пересобираем структуру
+function bindTaskTypeSelect(container, holder) {
+  const sel = container.querySelector('[data-task-type]');
+  if (!sel || !holder.task) return;
+  sel.addEventListener('change', () => {
+    const next = sel.value;
+    if (next === holder.task.type) return;
+    const ok = confirm(
+      'Сменить тип задания на «' + (TASK_TYPE_NAMES[next] || next) + '»?\n\n' +
+      'Вопрос сохранится. Варианты / пары / шаги будут пересобраны из текущих текстов — ' +
+      'их нужно будет проверить и поправить.'
+    );
+    if (!ok) { sel.value = holder.task.type; return; }
+    holder.task = convertTaskType(holder.task, next);
+    markDirty();
+    rerenderCard(container.closest('.card'));
+    toast('Тип задания изменён — проверьте варианты и ответы');
+  });
+}
+
 function bindFileEvents() {
   document.querySelectorAll('[data-section="files"] .card').forEach(card => {
+    if (card.dataset.bound === '1') return;
+    card.dataset.bound = '1';
     const idx = +card.dataset.fileIndex;
     const f = DATA.files[idx];
 
@@ -636,8 +734,9 @@ function bindFileEvents() {
     });
 
     const taskEditor = card.querySelector('[data-task-editor]');
-    if (taskEditor) {
+    if (taskEditor && f.task) {
       bindTaskEvents(taskEditor, f.task, () => markDirty());
+      bindTaskTypeSelect(taskEditor, f);
     }
   });
 }
@@ -693,20 +792,15 @@ function renderBranchCard(b, i) {
         <label>Текст после успеха</label>
         <textarea data-bind="success" rows="2">${escapeHtml(b.success||'')}</textarea>
       </div>
-      <div class="task-editor" data-task-editor>
-        <h4>📝 Задание</h4>
-        <div class="field">
-          <label>Вопрос / инструкция</label>
-          <input type="text" data-task="question" value="${escapeHtml(b.task.question||'')}">
-        </div>
-        ${renderTaskBody(b.task)}
-      </div>
+      ${renderTaskEditor(b.task)}
     </div>
   `;
 }
 
 function bindBranchEvents() {
   document.querySelectorAll('[data-section="branches"] .card').forEach(card => {
+    if (card.dataset.bound === '1') return;
+    card.dataset.bound = '1';
     const idx = +card.dataset.branchIndex;
     const b = DATA.branches[idx];
 
@@ -718,7 +812,10 @@ function bindBranchEvents() {
     });
 
     const taskEditor = card.querySelector('[data-task-editor]');
-    if (taskEditor) bindTaskEvents(taskEditor, b.task, () => markDirty());
+    if (taskEditor) {
+      bindTaskEvents(taskEditor, b.task, () => markDirty());
+      bindTaskTypeSelect(taskEditor, b);
+    }
 
     const rm = card.querySelector('[data-remove-branch]');
     if (rm) rm.addEventListener('click', () => {
@@ -949,14 +1046,7 @@ function bindTaskEvents(container, task, onChange) {
         onChange();
         // Перерисовываем карточку
         const card = container.closest('.card');
-        if (card && card.dataset.fileIndex !== undefined) {
-          const idx = +card.dataset.fileIndex;
-          card.outerHTML = renderFileCard(DATA.files[idx], idx);
-        } else if (card && card.dataset.branchIndex !== undefined) {
-          const idx = +card.dataset.branchIndex;
-          card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
-        }
-        bindFileEvents(); bindBranchEvents();
+        if (card) rerenderCard(card);
       });
     });
     const addBtn = container.querySelector('[data-add-option]');
@@ -964,14 +1054,7 @@ function bindTaskEvents(container, task, onChange) {
       task.options.push('Новый вариант');
       onChange();
       const card = container.closest('.card');
-      if (card && card.dataset.fileIndex !== undefined) {
-        const idx = +card.dataset.fileIndex;
-        card.outerHTML = renderFileCard(DATA.files[idx], idx);
-      } else if (card && card.dataset.branchIndex !== undefined) {
-        const idx = +card.dataset.branchIndex;
-        card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
-      }
-      bindFileEvents(); bindBranchEvents();
+      if (card) rerenderCard(card);
     });
   }
 
@@ -996,14 +1079,7 @@ function bindTaskEvents(container, task, onChange) {
         task.pairs.splice(i, 1);
         onChange();
         const card = container.closest('.card');
-        if (card && card.dataset.fileIndex !== undefined) {
-          const idx = +card.dataset.fileIndex;
-          card.outerHTML = renderFileCard(DATA.files[idx], idx);
-        } else if (card && card.dataset.branchIndex !== undefined) {
-          const idx = +card.dataset.branchIndex;
-          card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
-        }
-        bindFileEvents(); bindBranchEvents();
+        if (card) rerenderCard(card);
       });
     });
     const addBtn = container.querySelector('[data-add-pair]');
@@ -1011,14 +1087,7 @@ function bindTaskEvents(container, task, onChange) {
       task.pairs.push({ left: 'Слева', right: 'Справа' });
       onChange();
       const card = container.closest('.card');
-      if (card && card.dataset.fileIndex !== undefined) {
-        const idx = +card.dataset.fileIndex;
-        card.outerHTML = renderFileCard(DATA.files[idx], idx);
-      } else if (card && card.dataset.branchIndex !== undefined) {
-        const idx = +card.dataset.branchIndex;
-        card.outerHTML = renderBranchCard(DATA.branches[idx], idx);
-      }
-      bindFileEvents(); bindBranchEvents();
+      if (card) rerenderCard(card);
     });
   }
 
